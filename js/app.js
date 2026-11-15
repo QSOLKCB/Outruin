@@ -8,6 +8,7 @@ import {RADIO_MIXES} from './radio.js';
 import {EFFECTS,compileEffect,effectVariant} from './sfx.js';
 import {Controls,ACTIONS,PROFILES,validBindings} from './input.js';
 import {advanceFrame} from './frame.js';
+import {Display} from './display.js';
 const $=id=>document.getElementById(id);
 const read=key=>{try{return localStorage.getItem('outruin.'+key);}catch{return null;}};
 const save=(key,value)=>{try{localStorage.setItem('outruin.'+key,value);}catch{/* Optional persistence must not stop a run. */}};
@@ -28,6 +29,8 @@ for(const name of Object.keys(DEFAULT_MIX)){const input=$('mix-'+name),output=$(
 for(const mix of RADIO_MIXES){const option=document.createElement('option');option.value=mix.id;option.textContent=mix.label;$('radio-mix').append(option);}
 for(const [id,label] of Object.entries(EFFECTS)){const option=document.createElement('option');option.value=id;option.textContent=label;$('effect-mix').append(option);}
 $('touch-toggle').checked=read('touch')==='on';document.body.classList.toggle('show-touch',$('touch-toggle').checked);
+const display=new Display({select:$('display-mode'),button:$('fullscreen'),feedback:$('display-status'),initial:read('display'),
+  save:mode=>save('display',mode),onChange:()=>{clear();sound.stop();if(started&&['road','foot'].includes(state.mode))togglePause(true);}});
 function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 function clear(){controls.clear();clock.reset();clock.presentation=null;clock.renderAlpha=1;last=0;}
 function updateSound(){$('sound').textContent=sound.enabled?'SOUND ON':'SOUND OFF';$('sound').setAttribute('aria-pressed',String(sound.enabled));}
@@ -39,7 +42,7 @@ function start(){
   if(!$('seed').checkValidity()||$('seed').value===''){$('menu-error').textContent='Choose a whole-number seed from 0 to 4294967295.';return;}
   try{state=createGame({seed:Number($('seed').value),difficulty:$('difficulty').value,pack});}catch(e){$('menu-error').textContent=e.message;return;}
   started=true;paused=false;lastMode='road';resultRecorded=false;clear();clock.setPaused(false);sound.stop();sound.unlock();
-  document.body.classList.add('playing');$('menu-error').textContent='';updateUI();$('game').focus({preventScroll:true});
+  document.body.classList.add('playing');display.refresh();$('menu-error').textContent='';updateUI();$('game').focus({preventScroll:true});
 }
 function garage(){started=false;paused=false;sound.stop();clear();state=createGame({pack});document.body.classList.remove('playing');updateUI();$('start').focus({preventScroll:true});}
 function updatePackUI(){
@@ -95,7 +98,6 @@ $('reset-bindings').onclick=()=>{controls.custom=null;controls.cancelBind();cont
 function renderBindings(){const container=$('bindings');container.replaceChildren();const bindings=controls.custom??PROFILES[controls.profile];
   for(const action of ACTIONS){const button=document.createElement('button');button.textContent=action.toUpperCase();const val=document.createElement('span'),b=bindings[action];val.textContent=b.button!==undefined?'BTN '+b.button:'AXIS '+b.axis+(b.sign>0?' +':' −');button.append(val);
     button.onclick=()=>{controls.bind(action);$('binding-status').textContent='Release the pad, then press a button or move an axis for '+action+'.';};container.append(button);}}
-$('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{$('binding-status').textContent='Fullscreen is unavailable in this browser. Landscape mode also works.';}};
 $('journal').onclick=()=>download('outruin-run-'+state.seed+'.json',new Blob([JSON.stringify(runRecord(state))],{type:'application/json'}));
 function fillWorkshop(p){sound.stopPreview();$('pack-source').value=serializePack(p);$('edit-name').value=p.name;$('edit-car').value=p.vehicle.name;$('edit-color').value=p.vehicle.color;$('edit-speed').value=Math.round(p.vehicle.topSpeed*.216);}
 $('workshop').onclick=()=>{importToken++;$('example-pack').value='';fillWorkshop(pack);$('mod-status').textContent='Edit any value, then validate and apply.';showDialog('workshop-dialog');};
@@ -147,6 +149,6 @@ if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWo
 // Explicit test mode exposes observations and bounded fixture stepping, never enabled by default.
 if(new URLSearchParams(location.search).has('test'))Object.defineProperty(window,'outruinTest',{value:{
   snapshot:()=>snapshot(state),state:()=>state,renderer,clock,controls,sound,stepFrame:(seconds,mask=0)=>{const events=advanceFrame(clock,state,mask,seconds);updateUI();return events;},
-  load:s=>{state=s;started=true;paused=false;lastMode=s.mode;clear();clock.setPaused(false);document.body.classList.add('playing');updateUI();},
+  load:s=>{state=s;started=true;paused=false;lastMode=s.mode;clear();clock.setPaused(false);document.body.classList.add('playing');display.refresh();updateUI();},
   setPaused:togglePause,pack:()=>pack,started:()=>started
 }});

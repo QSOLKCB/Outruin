@@ -1,5 +1,27 @@
 # Validation scope
 
+## Display modes — executed 15 November 2026 (Adelaide)
+
+Starting from merged source `ec30415b5d48e613f3452ad61330315d3ca0670f`:
+
+- 64 Node tests passed; display work does not change simulation/replay rules.
+- 28 packaged Chromium checks passed, including native fullscreen entry/exit,
+  restoring the previous windowed mode, held-input cleanup, paused ticks,
+  denied-fullscreen fallback, persisted preferences, and the Controls shortcut.
+- The full canvas, HUD, toolbar and mission text fit inside 1836×890, 1366×650
+  and 1280×600 viewports. Touch layouts also fit at 320×844, 390×844 and 844×390;
+  resize preserves the composition. Tests check element bounds, no document
+  overflow and `object-fit: contain`. Short fullscreen menus remain reachable
+  by scrolling inside the overlay.
+- Source/provenance checks and the allowlisted build passed (28 runtime files
+  plus the generated service worker). Desktop and touch captures were visually
+  inspected. Source-bound receipts are in [`evidence/display-upgrade/`](evidence/display-upgrade/).
+
+The browser run uses Chromium 141.0.7390.37 and Playwright 1.62.1. Native exits
+are exercised through `exitFullscreen()` and its real `fullscreenchange` event;
+the physical browser Esc shortcut, mobile fullscreen hardware, Firefox and
+WebKit are not covered by this run. Existing audio evidence remains unchanged.
+
 ## Wasteland Radio — executed 15 November 2026
 
 Starting from merged source `ce9ac790fa8274c60268195918c3d32e09f68312`:
