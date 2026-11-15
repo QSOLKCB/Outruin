@@ -9,7 +9,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 def runtime_files():
     names = ['index.html', 'style.css', '.nojekyll', 'assets/icon.svg']
-    for folder in ['js', 'vendor/vanillajs/modules', 'mods']:
+    for folder in ['js', 'vendor/vanillajs/modules', 'vendor/vanillajs/api', 'mods']:
         names.extend(str(p.relative_to(ROOT)) for p in (ROOT / folder).rglob('*') if p.is_file() and p.suffix in {'.js', '.json'})
     names.extend(['LICENSE', 'NOTICE', 'vendor/vanillajs/LICENSE', 'vendor/PROVENANCE.json'])
     return sorted(names)

@@ -3,7 +3,7 @@ import {FixedClock} from '../vendor/vanillajs/modules/time/index.js';
 import {createGame,command,runRecord,snapshot} from './sim.js';
 import {DEFAULT_PACK,parsePack,serializePack,packFingerprint} from './mod.js';
 import {Renderer} from './render.js';
-import {Sound,compileScore} from './sound.js';
+import {Sound,compileSoundtrack} from './sound.js';
 import {Controls,ACTIONS,PROFILES,validBindings} from './input.js';
 import {advanceFrame} from './frame.js';
 const $=id=>document.getElementById(id);
@@ -22,7 +22,7 @@ try{const bindings=JSON.parse(read('bindings'));if(validBindings(bindings))contr
 sound.setEnabled(read('sound')!=='off');updateSound();
 $('touch-toggle').checked=read('touch')==='on';document.body.classList.toggle('show-touch',$('touch-toggle').checked);
 function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-function clear(){controls.clear();clock.reset();last=0;}
+function clear(){controls.clear();clock.reset();clock.presentation=null;clock.renderAlpha=1;last=0;}
 function updateSound(){$('sound').textContent=sound.enabled?'SOUND ON':'SOUND OFF';$('sound').setAttribute('aria-pressed',String(sound.enabled));}
 function togglePause(value){
   if(!started||!['road','foot'].includes(state.mode))return;
@@ -99,7 +99,7 @@ $('import-pack').onclick=()=>$('pack-file').click();
 $('pack-file').onchange=async()=>{const file=$('pack-file').files[0];if(!file)return;const token=++importToken;try{if(file.size>65536)throw new Error('File exceeds 64 KiB');const next=parsePack(await file.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Imported '+next.name+'. Apply to start a new campaign.';}catch(e){$('mod-status').textContent='Import rejected: '+e.message;}finally{$('pack-file').value='';}};
 $('pack-source').addEventListener('input',()=>importToken++);
 $('example-pack').onchange=async()=>{const id=$('example-pack').value;if(!['the-last-signal','heavy-metal','night-courier'].includes(id))return;const token=++importToken;try{const response=await fetch('mods/'+id+'.json');if(!response.ok)throw new Error('Example could not be loaded');const next=parsePack(await response.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Example loaded. Edit or Apply to drive it.';}catch(e){if(token===importToken)$('mod-status').textContent=e.message;}};
-$('export-wav').onclick=()=>{try{const draft=parsePack($('pack-source').value);const seedInput=$('seed');if(seedInput.value===''||!seedInput.checkValidity())throw new RangeError('Choose a whole-number seed from 0 to 4294967295.');const score=compileScore(draft,Number(seedInput.value));download('outruin-'+draft.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('mod-status').textContent='Original 48 kHz PCM soundtrack exported.';}catch(e){$('mod-status').textContent=e.message;}};
+$('export-wav').onclick=()=>{try{const draft=parsePack($('pack-source').value);const seedInput=$('seed');if(seedInput.value===''||!seedInput.checkValidity())throw new RangeError('Choose a whole-number seed from 0 to 4294967295.');const score=compileSoundtrack(draft,Number(seedInput.value));download('outruin-'+draft.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('mod-status').textContent='Complete four-phrase 48 kHz PCM soundtrack exported.';}catch(e){$('mod-status').textContent=e.message;}};
 addEventListener('blur',()=>{if(started&&['road','foot'].includes(state.mode))togglePause(true);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)togglePause(true);});
 addEventListener('pagehide',()=>{sound.stop();controls.clear();clock.setPaused(true);});
@@ -110,7 +110,7 @@ function frame(now){
     if(clock.paused)clock.setPaused(false);const beforeTick=state.tick;const events=advanceFrame(clock,state,controls.mask(pm),elapsed);if(state.tick>beforeTick)controls.consume();for(const e of events)sound.event(e);
     if(state.mode!==lastMode){controls.clear();lastMode=state.mode;updateUI();}
   }
-  renderer.draw(state);sound.sync(state,!started||paused||dialogs());
+  renderer.draw(state,paused||dialogs()?1:clock.renderAlpha??1,clock.presentation?.state===state?clock.presentation.previous:null);sound.sync(state,!started||paused||dialogs());
   if(now-uiAt>100){updateUI();uiAt=now;}requestAnimationFrame(frame);
 }
 updatePackUI();updateUI();renderBindings();requestAnimationFrame(frame);

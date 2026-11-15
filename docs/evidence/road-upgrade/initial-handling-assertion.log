@@ -1,0 +1,51 @@
+✔ same seed and tick inputs replay exactly, including the owned mod (58.256665ms)
+✖ steering moves laterally; brake, drag and boost change speed (8.541609ms)
+✔ forward fire respects magazine cost, cooldown and damage (1.421272ms)
+✔ side guns target only the requested side and nearby vehicles (1.196009ms)
+✔ contact damage is bounded by invulnerability; harder mode hits harder (1.826034ms)
+✔ fuel exhaustion opens a recoverable foot stop; loot is single-use (1.227918ms)
+✔ a spent stop and empty tank ends the run without a softlock (0.829018ms)
+✔ outposts only open at low speed and interact is edge-triggered (0.831012ms)
+✔ jump, on-foot fire, pickups and return operate independently of rendering (4.06833ms)
+✔ checkpoint, shop and route choices preserve earned resources (1.037771ms)
+✔ final war rig is required and survives roadside-stop lifecycle (1.689867ms)
+✔ catch-up aborts immediately on mode change and retains shot events (1.536369ms)
+✔ render-frame chunking does not change tick outcomes (2.306887ms)
+✔ modded car, gun, enemy, level and difficulty take effect (3.486342ms)
+✔ all 101 accepted one-scrap purchases survive a recorded depot replay (14.228991ms)
+✔ invalid replay records fail closed (2.034054ms)
+✔ replay captures the time limit on its final recorded tick (0.644872ms)
+✔ a complete original campaign can be won and replayed from real input decisions (38.915142ms)
+✔ both example vehicle packs complete a full Drifter campaign (40.033554ms)
+✔ default campaign survives an input-driven Survivor run (9.115447ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 19
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 404.449392
+
+✖ failing tests:
+
+test at tests/sim.test.js:10:1
+✖ steering moves laterally; brake, drag and boost change speed (8.541609ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(s.x>500)
+  
+      at TestContext.<anonymous> (file:///workspace/scratch/c1269e1fd4e9/Outruin/tests/sim.test.js:10:134)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

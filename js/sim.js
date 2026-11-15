@@ -4,20 +4,20 @@
 import {seededRandom,clamp} from '../vendor/vanillajs/modules/math/index.js';
 import {INPUT as I,VERSION} from './config.js';
 import {DEFAULT_PACK,parsePack,serializePack} from './mod.js';
+import {roadBend,steerCar} from './driving.js';
 export {INPUT} from './config.js';
 const has=(m,k)=>(m&I[k])!==0;
 export function createGame({seed=1988,difficulty='survivor',pack=DEFAULT_PACK}={}) {
   pack=parsePack(serializePack(pack));
   if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Object.hasOwn(pack.difficulties,difficulty))throw new RangeError('Invalid run configuration');
-  return {version:VERSION,seed,difficulty,pack,random:seededRandom(seed),tick:0,mode:'road',sector:0,route:'highway',distance:0,total:0,x:0,vx:0,speed:0,
+  return {version:VERSION,seed,difficulty,pack,random:seededRandom(seed),tick:0,mode:'road',sector:0,route:'highway',distance:0,total:0,x:0,vx:0,speed:0,steering:0,slip:0,
     hull:pack.vehicle.armour,health:100,fuel:pack.vehicle.fuelCapacity,ammo:pack.difficulties[difficulty].ammo,boost:1000,boostLocked:false,scrap:0,score:0,kills:0,
-    engine:0,gun:0,cooldown:0,sideCooldown:0,invulnerable:0,spawnIn:150,entities:[],particles:[],nextId:1,events:[],
+    engine:0,gun:0,cooldown:0,sideCooldown:0,invulnerable:0,hitTick:-100,spawnIn:150,entities:[],particles:[],tracers:[],projectiles:[],nextId:1,events:[],
     visited:false,stopAtEnd:false,foot:null,bossSpawned:false,bossDefeated:false,lastMask:0,
     journal:[],commands:[],notice:'Deliver the signal core. Reach the coast.',noticeUntil:240,reason:''};
 }
 export function bendAt(distance,sector=0,route='highway',bends=DEFAULT_PACK.bends) {
-  const index=Math.floor(Math.max(0,distance)/280000);
-  return bends[(index+sector*3)%bends.length]*(route==='canyon'?2:1);
+  return roadBend(distance,sector,route,bends);
 }
 function event(s,type,extra={}){s.events.push({type,tick:s.tick,...extra});}
 function say(s,text){s.notice=text;s.noticeUntil=s.tick+210;}
@@ -25,7 +25,7 @@ function hurt(s,amount,foot=false) {
   if(s.invulnerable>0)return;
   const damage=Math.max(1,Math.round(amount*s.pack.difficulties[s.difficulty].damage/100));
   const key=foot?'health':'hull';s[key]=Math.max(0,s[key]-damage);s.invulnerable=foot?50:38;
-  event(s,'hit');
+  s.hitTick=s.tick;event(s,'hit');
 }
 function spawn(s) {
   const roll=s.random(),kind=roll<.48?'bike':roll<.74?'buggy':roll<.87?'truck':roll<.94?'fuel':'ammo';
@@ -47,11 +47,13 @@ function roadShot(s,side=0) {
     (side?Math.abs(e.z-s.distance)<weapon.range&&Math.sign(e.x-s.x)===side:
       e.z>s.distance&&e.z-s.distance<weapon.range&&Math.abs(e.x-s.x)<240))
     .sort((a,b)=>Math.abs(a.z-s.distance)-Math.abs(b.z-s.distance)||a.id-b.id);
+  const target=targets[0];
+  s.tracers.push({fromX:s.x,fromZ:s.distance,x:target?.x??(s.x+side*1000),z:target?.z??(s.distance+(side?0:weapon.range)),ttl:6,hit:!!target,side});
   if(targets[0]){targets[0].hp-=weapon.damage+(side?0:s.gun);targets[0].flash=5;if(targets[0].hp<=0)destroy(s,targets[0]);}
 }
 export function enterOutpost(s,atEnd=false) {
   if(s.mode!=='road'||s.visited)return false;
-  s.mode='foot';s.speed=0;s.vx=0;s.visited=true;s.stopAtEnd=atEnd;s.lastMask=0;s.invulnerable=60;
+  s.mode='foot';s.speed=0;s.vx=0;s.steering=0;s.tracers=[];s.projectiles=[];s.visited=true;s.stopAtEnd=atEnd;s.lastMask=0;s.invulnerable=60;
   s.foot={x:90,y:0,vy:0,facing:1,shot:0,crates:s.pack.foot.crates.map(c=>({...c,taken:false})),
     enemies:s.pack.foot.enemies.map((x,i)=>({id:i+1,x,hp:s.pack.foot.enemyHealth,cooldown:90+i*15})),bullets:[]};
   say(s,'Scavenge supplies. Return to your car and press E / F.');event(s,'outpost');return true;
@@ -65,9 +67,7 @@ function roadTick(s,m,edge) {
   else s.speed=Math.max(0,s.speed-v.coasting);
   if(has(m,'brake'))s.speed=Math.max(0,s.speed-v.braking);
   if(s.speed>top)s.speed=Math.max(top,s.speed-8);
-  const steer=(has(m,'right')?1:0)-(has(m,'left')?1:0),target=steer*(s.speed>60?v.steering:7);
-  s.vx+=Math.sign(target-s.vx)*Math.min(v.grip,Math.abs(target-s.vx));
-  s.x=clamp(s.x+s.vx-Math.trunc(bendAt(s.distance,s.sector,s.route,s.pack.bends)*s.speed*s.speed/1166400),-1550,1550);
+  steerCar(s,(has(m,'right')?1:0)-(has(m,'left')?1:0),has(m,'brake'),bendAt(s.distance,s.sector,s.route,s.pack.bends));
   if(Math.abs(s.x)>1000){s.speed=Math.max(0,s.speed-v.offroadDrag);if(s.tick%90===0&&s.speed>400)hurt(s,2);}
   if(boosting){s.boost=Math.max(0,s.boost-v.boostDrain);if(s.boost===0)s.boostLocked=true;}else s.boost=Math.min(1000,s.boost+v.boostRegen);
   s.distance+=s.speed;s.total+=s.speed;
@@ -85,9 +85,14 @@ function roadTick(s,m,edge) {
     let delta=e.z-s.distance;
     if(e.kind==='boss') {e.z=s.distance+clamp(delta,85000,240000);delta=e.z-s.distance;
       if(s.tick%120<60)e.x=clamp(e.x+5,-650,650);else e.x=clamp(e.x-5,-650,650);}
-    if(['bike','buggy','boss'].includes(e.kind)&&delta>-25000&&delta<180000){
+    if(['bike','buggy'].includes(e.kind)&&delta>20000&&delta<350000&&e.shot>42){
+      const lane=e.kind==='bike'?Math.sin((s.tick+e.phase)/90)*550:Math.sin((s.tick+e.phase)/180)*350;
+      e.x+=clamp(lane-e.x,-(e.kind==='bike'?3:1),e.kind==='bike'?3:1);
+    }
+    if(['bike','buggy','boss'].includes(e.kind)&&delta>10000&&delta<240000){
       if(--e.shot<=0){e.shot=s.pack.enemies[e.kind].fireInterval;event(s,'enemy-shot',{x:e.x,z:e.z});
-        if(Math.abs(e.x-s.x)<(e.kind==='boss'?330:250))hurt(s,s.pack.enemies[e.kind].damage);}
+        if(s.projectiles.length<48){const flight=Math.max(1,delta/(2400+s.speed));
+          s.projectiles.push({id:s.nextId++,x:e.x,z:e.z,vx:clamp((s.x-e.x)/flight,-18,18),damage:s.pack.enemies[e.kind].damage,ttl:180});}}
     }
     if(Math.abs(delta)<10000&&Math.abs(e.x-s.x)<210){
       if(e.kind==='fuel'){s.fuel=Math.min(v.fuelCapacity,s.fuel+s.pack.rules.roadFuel);e.dead=true;event(s,'pickup');say(s,'Fuel salvaged');}
@@ -96,6 +101,11 @@ function roadTick(s,m,edge) {
     }
   }
   s.entities=s.entities.filter(e=>!e.dead&&e.z>s.distance-50000&&e.z<s.distance+700000);
+  for(const bullet of s.projectiles){
+    const before=bullet.z-(s.distance-s.speed);bullet.z-=2400;bullet.x+=bullet.vx;bullet.ttl--;
+    if(before>=-6000&&bullet.z-s.distance<=6000){if(Math.abs(bullet.x-s.x)<160)hurt(s,bullet.damage);bullet.ttl=0;}
+  }
+  s.projectiles=s.projectiles.filter(b=>b.ttl>0&&b.z>s.distance-6000);
   if(has(edge,'interact')){
     if(s.visited)say(s,'This sector has already been scavenged. Keep moving.');
     else if(s.speed>s.pack.rules.stopSpeed)say(s,`Brake below ${Math.round(s.pack.rules.stopSpeed*.216)} km/h to stop.`);
@@ -142,7 +152,7 @@ function footTick(s,m,edge) {
   if(has(edge,'interact')){
     if(f.x<160){
       if(s.fuel<=0){say(s,'Find a fuel crate before returning to the road.');return;}
-      s.mode=s.stopAtEnd?'depot':'road';if(!s.bossDefeated)s.bossSpawned=false;s.lastMask=0;s.invulnerable=60;s.entities=[];s.spawnIn=150;event(s,'return');
+      s.mode=s.stopAtEnd?'depot':'road';if(!s.bossDefeated)s.bossSpawned=false;s.lastMask=0;s.invulnerable=60;s.entities=[];s.tracers=[];s.projectiles=[];s.spawnIn=150;event(s,'return');
       say(s,s.mode==='road'?'Back on the road. Hold throttle to move.':'Spend your scrap, then choose the next route.');return;
     }
     const crate=f.crates.find(c=>!c.taken&&Math.abs(c.x-f.x)<80);
@@ -155,6 +165,7 @@ export function step(s,mask=0,{record=true}={}) {
   if(record)s.journal.push(mask);
   const edge=mask&~s.lastMask;s.lastMask=mask;s.tick++;
   if(s.cooldown>0)s.cooldown--;if(s.sideCooldown>0)s.sideCooldown--;if(s.invulnerable>0)s.invulnerable--;
+  for(const t of s.tracers)t.ttl--;s.tracers=s.tracers.filter(t=>t.ttl>0);
   for(const p of s.particles)p.ttl--;s.particles=s.particles.filter(p=>p.ttl>0);
   if(s.mode==='road')roadTick(s,mask,edge);else footTick(s,mask,edge);
   if(s.tick>=72000&&['road','foot'].includes(s.mode)){s.mode='lost';s.reason='The signal faded after twenty minutes.';}
@@ -172,7 +183,7 @@ export function command(s,type,value,{record=true}={}) {
     if(value==='engine')s.engine=item.amount;if(value==='gun')s.gun=item.amount;
     event(s,'pickup');
   } else if(type==='route'&&['highway','canyon'].includes(value)&&s.sector<s.pack.sectors.length-1) {
-    s.sector++;s.route=value;s.distance=0;s.speed=0;s.x=0;s.vx=0;s.entities=[];s.particles=[];s.visited=false;s.foot=null;
+    s.sector++;s.route=value;s.distance=0;s.speed=0;s.x=0;s.vx=0;s.steering=0;s.slip=0;s.entities=[];s.particles=[];s.tracers=[];s.projectiles=[];s.visited=false;s.foot=null;
     s.mode='road';s.lastMask=0;s.spawnIn=150;s.invulnerable=90;s.score+=500;if(value==='canyon')s.scrap+=25;
     say(s,s.pack.sectors[s.sector].name+' / '+(value==='canyon'?'Tight bends. More raiders. +25 hazard pay.':'Open highway. Keep the signal alive.'));
   } else return false;

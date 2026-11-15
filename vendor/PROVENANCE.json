@@ -27,6 +27,24 @@
       "license": "Apache-2.0",
       "gitBlob": "698d2cf9238999cbd6dfd50010c7ba3e49bc5e3a",
       "sha256": "07e19391b84034acba56ef840a4d622b70e815f5376de123b6a07a9ccebf3098"
+    },
+    {
+      "local": "vendor/vanillajs/modules/soundtrack/index.js",
+      "source": "modules/soundtrack/index.js",
+      "repository": "QSOLKCB/VANILLAJS",
+      "commit": "987c8d9be0af418307ea7cda05cbf56b5f130c71",
+      "license": "Apache-2.0",
+      "gitBlob": "add66c6382508fef3e2363c4f7a0d040a46fb286",
+      "sha256": "dd0760175923e4c55d85c19fb441b31890bc1bf6c138965f301cfbbb1eddaaee"
+    },
+    {
+      "local": "vendor/vanillajs/api/audio/index.js",
+      "source": "api/audio/index.js",
+      "repository": "QSOLKCB/VANILLAJS",
+      "commit": "987c8d9be0af418307ea7cda05cbf56b5f130c71",
+      "license": "Apache-2.0",
+      "gitBlob": "b1f15bd92d38fde942d55460fbe7374dc7780dc0",
+      "sha256": "5885ba4b6d9197e6369a8d31f96ddbe9ff22e4e878fed2ace4dcceea8d30a458"
     }
   ],
   "patterns": [

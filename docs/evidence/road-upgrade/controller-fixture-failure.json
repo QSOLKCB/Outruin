@@ -1,0 +1,66 @@
+{
+  "status": "FAIL",
+  "root": "/workspace/scratch/c1269e1fd4e9/Outruin/dist",
+  "checks": [
+    {
+      "name": "garage and original presentation",
+      "status": "PASS"
+    },
+    {
+      "name": "keyboard steering, throttle and toolbar-focused Space fire",
+      "status": "PASS"
+    },
+    {
+      "name": "pause cancels input and prevents simulation/audio progress",
+      "status": "PASS"
+    },
+    {
+      "name": "OPT background cache matches reference pixels for every biome and foot view",
+      "status": "PASS"
+    },
+    {
+      "name": "stationary steering, road projection and interpolated frames agree",
+      "status": "PASS"
+    },
+    {
+      "name": "road surface has no terrain-coloured seams between depth strips",
+      "status": "PASS"
+    },
+    {
+      "name": "upgraded road, target warnings and all three biomes render",
+      "status": "PASS"
+    },
+    {
+      "name": "a failed audio device cannot stop the render loop or overwrite preferences",
+      "status": "PASS"
+    },
+    {
+      "name": "outpost movement, loot and return through keyboard",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint shop, route and final victory UI",
+      "status": "PASS"
+    },
+    {
+      "name": "WAV export uses seed zero rather than the default seed",
+      "status": "PASS"
+    },
+    {
+      "name": "shop cache invalidates when modded prices change without changing resources",
+      "status": "PASS"
+    },
+    {
+      "name": "mod validation, bundled custom car and export are usable",
+      "status": "PASS"
+    },
+    {
+      "name": "controller profiles and remap capture simulated pad",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 20000ms exceeded."
+    }
+  ],
+  "errors": [],
+  "browser": "141.0.7390.37",
+  "failure": "page.waitForFunction: Timeout 20000ms exceeded.\n    at /workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:112:183\n    at async check (/workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:10:34)\n    at async file:///workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:108:3"
+}
