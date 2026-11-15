@@ -1,0 +1,29 @@
+{
+  "kind": "outruin.validation-source.v1",
+  "runtime": {
+    ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "NOTICE": "c8d75addd1dbeef857dbb092ec0dd214670c6859517e3d4a998799c7070bc9d1",
+    "assets/icon.svg": "9f7f421ca3a8385f97e3dbca06d3f70aeeac85b9337723d2c1cfdca8ca6a6409",
+    "index.html": "194c33e82613a0e3c78670957fa18cb80cecfee45f8d25ab315fd2c25ac2d45b",
+    "js/app.js": "f341ae48c4902a257a3d588869d966aa2332ae932c5eb67e0b8b22589d362111",
+    "js/config.js": "f1d64d2ee0da71ceca18e746dd719a499ff06a57e1afc7ed55ec6f5180c3a801",
+    "js/frame.js": "2c2b26b4c6467b8669ba951d0b7a29ce3df80766c7b62a3dc276b31d399c458b",
+    "js/input.js": "27cc0919c010ed08e5202cbc61405e19e90615db77661f5e404994d518b5a751",
+    "js/mod.js": "8e114db9a800bc1e5d109e436431cebbf21986af0052444827929f49d2568337",
+    "js/render.js": "b0d65012add59d63ccbd1ef45b013ae914e56737cbd83e59753dae042783c90c",
+    "js/sim.js": "3236f876a32ef5c117a49e6f758cadfa8ffca6eb7f12099e4a3a7edf8a7df2c7",
+    "js/sound.js": "392942d45ab1eda9b9f5cd772c883ffe84c7fe6d3bb91301bfe36d4236807616",
+    "mods/heavy-metal.json": "1b086614809fb2069ad77d4e01af9d4f41c5b22ffc0843fbc6d4faa0462b4735",
+    "mods/night-courier.json": "5f23875d28d89e5355b4201da3e1c37d2553fbb772dea7bca49cce74eca101f8",
+    "mods/the-last-signal.json": "cee7f71c462c593a00ecb28e82ac1dd8e52c3dc936e4b94e75639f12afb875bc",
+    "style.css": "66df561d589f71a333810a6cf6d01bfc50855a880e2f99dc0dd1dcfc2cfb74cf",
+    "sw.js": "8ca74df3d20aa6e37046bcd4cf4efa7a9b3db0dc32741a2993541f7927826de3",
+    "vendor/PROVENANCE.json": "0a6c9bb746a092f10aaad089d8f79a5a3a53e58f940e41eb5322c154ce398846",
+    "vendor/vanillajs/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/vanillajs/modules/audio2d/index.js": "07e19391b84034acba56ef840a4d622b70e815f5376de123b6a07a9ccebf3098",
+    "vendor/vanillajs/modules/math/index.js": "4f4ebf0786b97342c11004b8830a535890b16693458a0436edb1fc581a411da7",
+    "vendor/vanillajs/modules/time/index.js": "de94c0bc04e6a269504c5742455ce114f824c2c0d9d59a2fd94555df5d9bb4a2"
+  },
+  "notes": "Local evidence binds these exact packaged bytes. GitHub CI runs separately on the PR commit."
+}

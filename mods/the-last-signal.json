@@ -1,0 +1,286 @@
+{
+  "kind": "outruin.mod.v1",
+  "id": "last-signal",
+  "name": "The Last Signal",
+  "author": "QSOL-IMC",
+  "description": "Three regions. One signal core. A coast that might still be alive.",
+  "vehicle": {
+    "name": "Dust Kestrel",
+    "body": "interceptor",
+    "color": "#e0aa68",
+    "topSpeed": 1080,
+    "acceleration": 5,
+    "braking": 14,
+    "coasting": 2,
+    "steering": 25,
+    "grip": 4,
+    "offroadDrag": 12,
+    "armour": 100,
+    "fuelCapacity": 100000,
+    "boostPower": 400,
+    "boostDrain": 5,
+    "boostRegen": 1
+  },
+  "weapons": {
+    "forward": {
+      "name": "Belt-fed repeater",
+      "damage": 1,
+      "interval": 8,
+      "range": 320000,
+      "ammoCost": 1
+    },
+    "side": {
+      "name": "Door breach gun",
+      "damage": 2,
+      "interval": 24,
+      "range": 60000,
+      "ammoCost": 1
+    },
+    "foot": {
+      "name": "Salvage carbine",
+      "damage": 1,
+      "interval": 15,
+      "range": 65,
+      "ammoCost": 1
+    }
+  },
+  "enemies": {
+    "bike": {
+      "name": "Dust rider",
+      "color": "#da7651",
+      "hp": 2,
+      "speed": 620,
+      "damage": 5,
+      "fireInterval": 150,
+      "scrap": 20,
+      "score": 150
+    },
+    "buggy": {
+      "name": "Scrap hound",
+      "color": "#8eb2a2",
+      "hp": 3,
+      "speed": 450,
+      "damage": 5,
+      "fireInterval": 150,
+      "scrap": 20,
+      "score": 150
+    },
+    "truck": {
+      "name": "Iron hauler",
+      "color": "#aea489",
+      "hp": 5,
+      "speed": 340,
+      "damage": 18,
+      "fireInterval": 180,
+      "scrap": 30,
+      "score": 300
+    },
+    "boss": {
+      "name": "War rig",
+      "color": "#c66142",
+      "hp": 45,
+      "speed": 800,
+      "damage": 9,
+      "fireInterval": 75,
+      "scrap": 150,
+      "score": 2000
+    }
+  },
+  "sectors": [
+    {
+      "id": "rust",
+      "name": "THE RUST REACH",
+      "short": "Rust Reach",
+      "length": 2400000,
+      "sky": "#132d37",
+      "haze": "#dd8751",
+      "ground": "#986143",
+      "sand": "#b47a4b",
+      "mountain": "#6c4840",
+      "accent": "#f1b766",
+      "outpost": "RELAY 09"
+    },
+    {
+      "id": "salt",
+      "name": "THE SALT GRAVE",
+      "short": "Salt Grave",
+      "length": 2800000,
+      "sky": "#243b48",
+      "haze": "#d6c6a2",
+      "ground": "#a49e84",
+      "sand": "#b7b298",
+      "mountain": "#5a6f71",
+      "accent": "#a4e2d0",
+      "outpost": "DEAD FREQUENCY"
+    },
+    {
+      "id": "black",
+      "name": "BLACK GLASS",
+      "short": "Black Glass",
+      "length": 3200000,
+      "sky": "#181d32",
+      "haze": "#b56e68",
+      "ground": "#493a43",
+      "sand": "#62505a",
+      "mountain": "#303040",
+      "accent": "#ff8c65",
+      "outpost": "THE LAST SIGNAL"
+    }
+  ],
+  "bends": [
+    0,
+    0,
+    2,
+    4,
+    2,
+    -3,
+    -5,
+    -2,
+    0,
+    3,
+    5,
+    1,
+    -2,
+    -4,
+    0,
+    1
+  ],
+  "difficulties": {
+    "drifter": {
+      "label": "Drifter",
+      "damage": 65,
+      "spawn": 230,
+      "fuel": 80,
+      "ammo": 320,
+      "description": "More supplies. A little room to breathe."
+    },
+    "survivor": {
+      "label": "Survivor",
+      "damage": 100,
+      "spawn": 175,
+      "fuel": 100,
+      "ammo": 240,
+      "description": "The road does not owe you anything."
+    },
+    "wastelord": {
+      "label": "Wastelord",
+      "damage": 145,
+      "spawn": 130,
+      "fuel": 120,
+      "ammo": 200,
+      "description": "Fast raiders. Thin margins. No mercy."
+    }
+  },
+  "rules": {
+    "fuelDrain": 100,
+    "collisionDamage": 12,
+    "bossAt": 1700000,
+    "spawnNear": 210000,
+    "spawnSpread": 100000,
+    "roadFuel": 18000,
+    "roadAmmo": 45,
+    "stopSpeed": 300
+  },
+  "foot": {
+    "width": 1900,
+    "speed": 4,
+    "jump": 13,
+    "enemyHealth": 3,
+    "enemyDamage": 6,
+    "enemyInterval": 105,
+    "crates": [
+      {
+        "x": 310,
+        "kind": "fuel"
+      },
+      {
+        "x": 660,
+        "kind": "ammo"
+      },
+      {
+        "x": 970,
+        "kind": "health"
+      },
+      {
+        "x": 1320,
+        "kind": "scrap"
+      },
+      {
+        "x": 1650,
+        "kind": "fuel"
+      }
+    ],
+    "enemies": [
+      540,
+      1130,
+      1530
+    ],
+    "fuel": 40000,
+    "ammo": 100,
+    "health": 45,
+    "repair": 20,
+    "scrap": 100
+  },
+  "shop": {
+    "repair": {
+      "cost": 50,
+      "amount": 40
+    },
+    "fuel": {
+      "cost": 35,
+      "amount": 40000
+    },
+    "ammo": {
+      "cost": 30,
+      "amount": 100
+    },
+    "engine": {
+      "cost": 90,
+      "amount": 12
+    },
+    "gun": {
+      "cost": 110,
+      "amount": 1
+    }
+  },
+  "music": {
+    "title": "Dead Air / 88",
+    "tempo": 120,
+    "gain": 2700,
+    "wave": "saw",
+    "bass": [
+      55,
+      65,
+      73,
+      49
+    ],
+    "scale": [
+      220,
+      262,
+      294,
+      330,
+      392,
+      440,
+      523,
+      587
+    ],
+    "melody": [
+      0,
+      2,
+      4,
+      2,
+      0,
+      2,
+      5,
+      4,
+      0,
+      2,
+      4,
+      6,
+      5,
+      4,
+      2,
+      1
+    ]
+  }
+}

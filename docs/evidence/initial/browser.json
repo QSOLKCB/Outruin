@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "root": "dist/ (local allowlisted package)",
+  "checks": [
+    {
+      "name": "garage and original presentation",
+      "status": "PASS"
+    },
+    {
+      "name": "keyboard steering, throttle and toolbar-focused Space fire",
+      "status": "PASS"
+    },
+    {
+      "name": "pause cancels input and prevents simulation/audio progress",
+      "status": "PASS"
+    },
+    {
+      "name": "OPT background cache matches reference pixels for every biome and foot view",
+      "status": "PASS"
+    },
+    {
+      "name": "outpost movement, loot and return through keyboard",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint shop, route and final victory UI",
+      "status": "PASS"
+    },
+    {
+      "name": "mod validation, bundled custom car and export are usable",
+      "status": "PASS"
+    },
+    {
+      "name": "controller profiles and remap capture simulated pad",
+      "status": "PASS"
+    },
+    {
+      "name": "focus loss and controller disconnect pause safely",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile layouts and simultaneous touch input",
+      "status": "PASS"
+    },
+    {
+      "name": "offline reload retains full game and mod examples",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime has no uncaught browser errors",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "browser": "141.0.7390.37"
+}

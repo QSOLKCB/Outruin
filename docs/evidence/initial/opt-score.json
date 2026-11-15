@@ -1,0 +1,38 @@
+{
+  "scope": "score compilation requests only; excludes PCM rendering, playback, gameplay and startup",
+  "parity": "PASS",
+  "node": "v24.22.1",
+  "cpu": "AMD EPYC 7763 64-Core Processor",
+  "rounds": [
+    {
+      "requests": 500,
+      "compileMs": 13.609865000000013,
+      "reuseMs": 0.05660699999998542,
+      "checksum": 44000
+    },
+    {
+      "requests": 500,
+      "compileMs": 6.065156000000002,
+      "reuseMs": 0.2808379999999602,
+      "checksum": 44000
+    },
+    {
+      "requests": 500,
+      "compileMs": 5.595032000000003,
+      "reuseMs": 0.02156999999999698,
+      "checksum": 44000
+    },
+    {
+      "requests": 500,
+      "compileMs": 6.277795999999967,
+      "reuseMs": 0.021579999999971733,
+      "checksum": 44000
+    },
+    {
+      "requests": 500,
+      "compileMs": 5.724835999999982,
+      "reuseMs": 0.07489100000003646,
+      "checksum": 44000
+    }
+  ]
+}

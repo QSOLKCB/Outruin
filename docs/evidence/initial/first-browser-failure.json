@@ -1,0 +1,30 @@
+{
+  "status": "FAIL",
+  "root": "/workspace/scratch/8776d8824c22/Outruin",
+  "checks": [
+    {
+      "name": "garage and original presentation",
+      "status": "PASS"
+    },
+    {
+      "name": "keyboard steering, throttle and toolbar-focused Space fire",
+      "status": "PASS"
+    },
+    {
+      "name": "pause cancels input and prevents simulation/audio progress",
+      "status": "PASS"
+    },
+    {
+      "name": "OPT background cache matches reference pixels for every biome and foot view",
+      "status": "PASS"
+    },
+    {
+      "name": "outpost movement, loot and return through keyboard",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 30000ms exceeded."
+    }
+  ],
+  "errors": [],
+  "browser": "141.0.7390.37",
+  "failure": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/scratch/8776d8824c22/Outruin/tests/browser.mjs:39:177\n    at async check (/workspace/scratch/8776d8824c22/Outruin/tests/browser.mjs:10:34)\n    at async file:///workspace/scratch/8776d8824c22/Outruin/tests/browser.mjs:37:3"
+}

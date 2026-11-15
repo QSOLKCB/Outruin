@@ -1,0 +1,34 @@
+# Outruin roadmap
+
+## 0.1 — The Last Signal (implemented in the initial PR)
+
+- Three-region vehicle-combat campaign, scavenging and a final war rig.
+- Fuel, armour, health, ammunition, boost, scrap and relay upgrades.
+- Drifter / Survivor / Wastelord; highway / canyon route variants.
+- Keyboard, Xbox / standard, generic SNES mapping and touch controls.
+- Deterministic reference soundtrack, WAV export and tick-input replay records.
+- Versioned complete mod packs, in-game JSON workshop and three example packs.
+- Original README banner, offline cache, allowlisted Pages build and CI.
+
+## Next: The Vehicle Yard (not implemented)
+
+- Multiple selectable owned cars within one campaign pack.
+- Vehicle geometry authoring, local sprite sheets and visual weapon mounts.
+- Distinct tyres, gearing, suspension, damage locations and repair choices.
+
+## Next: The Road Foundry (not implemented)
+
+- Visual segment editor and per-sector bend graphs.
+- Physical junctions, authored branching campaign maps and optional jobs.
+- Moving roadblocks, richer convoy AI and more varied scavenging layouts.
+
+## Next: The Long Radio (not implemented)
+
+- Pattern/timeline music editor, additional arrangements and a replay viewer.
+- Shareable challenge packs and locally stored best-run ghosts.
+
+## Device evidence (ongoing)
+
+- Physical generic USB SNES and Xbox controllers.
+- Real Android/iOS touch, audio-unlock and lifecycle testing.
+- Firefox and WebKit coverage.

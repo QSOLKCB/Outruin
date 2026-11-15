@@ -1,0 +1,63 @@
+name: Verify and deploy
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: outruin-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pure simulation, replay, mods and PCM parity
+        run: node --test tests/*.test.js
+      - name: Source integrity and public packaging
+        run: |
+          python3 scripts/check.py
+          python3 scripts/build.py
+      - name: Install isolated test-only browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/outruin-browser" --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          node "$RUNNER_TEMP/outruin-browser/node_modules/playwright/cli.js" install --with-deps chromium
+          echo "PLAYWRIGHT_MODULES=$RUNNER_TEMP/outruin-browser/node_modules" >> "$GITHUB_ENV"
+      - name: Play the packaged game and verify offline reload
+        env:
+          TEST_ROOT: dist
+        run: node tests/browser.mjs
+      - name: Preserve browser evidence, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outruin-evidence-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: warn
+      - name: Upload verified site
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified game
+        id: deployment
+        uses: actions/deploy-pages@v4

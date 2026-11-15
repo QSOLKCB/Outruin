@@ -1,0 +1,51 @@
+{
+  "kind": "outruin.provenance.v1",
+  "files": [
+    {
+      "local": "vendor/vanillajs/modules/math/index.js",
+      "source": "modules/math/index.js",
+      "repository": "QSOLKCB/VANILLAJS",
+      "commit": "ac69cde61dcc5feb40ff138e69830c80b903a8e6",
+      "license": "Apache-2.0",
+      "gitBlob": "45e5fc4d6c6daa472a89fa59c80e6fd70b2c1455",
+      "sha256": "4f4ebf0786b97342c11004b8830a535890b16693458a0436edb1fc581a411da7"
+    },
+    {
+      "local": "vendor/vanillajs/modules/time/index.js",
+      "source": "modules/time/index.js",
+      "repository": "QSOLKCB/VANILLAJS",
+      "commit": "ac69cde61dcc5feb40ff138e69830c80b903a8e6",
+      "license": "Apache-2.0",
+      "gitBlob": "60c1532aaaac36beceb3e81f1a935c59478976b2",
+      "sha256": "de94c0bc04e6a269504c5742455ce114f824c2c0d9d59a2fd94555df5d9bb4a2"
+    },
+    {
+      "local": "vendor/vanillajs/modules/audio2d/index.js",
+      "source": "modules/audio2d/index.js",
+      "repository": "QSOLKCB/VANILLAJS",
+      "commit": "ac69cde61dcc5feb40ff138e69830c80b903a8e6",
+      "license": "Apache-2.0",
+      "gitBlob": "698d2cf9238999cbd6dfd50010c7ba3e49bc5e3a",
+      "sha256": "07e19391b84034acba56ef840a4d622b70e815f5376de123b6a07a9ccebf3098"
+    }
+  ],
+  "patterns": [
+    {
+      "repository": "QSOLKCB/STREET-RACER",
+      "commit": "03c038c401b3dada8646aa0c5791617d09683b00",
+      "paths": [
+        "shared/racer/frame.js",
+        "shared/racer/renderer.js"
+      ],
+      "use": "Lifecycle adaptation and pseudo-3D design reference; new game/renderer implementation"
+    },
+    {
+      "repository": "QSOLKCB/OPT",
+      "commit": "7556dd36acd53ed3ed538fd03b1db44e5c1ec869",
+      "paths": [
+        "optimizations/OPT-INV-001-invariant-driven-reuse.md"
+      ],
+      "use": "Immutable-input exact reuse with bounded cache and reference parity"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+✔ pack schema roundtrips and deeply freezes owned data (7.194929ms)
+✔ reject unsafe or broken pack: unknown (0.563941ms)
+✔ reject unsafe or broken pack: negative (0.339719ms)
+✔ reject unsafe or broken pack: huge (0.355859ms)
+✔ reject unsafe or broken pack: colour (0.378823ms)
+✔ reject unsafe or broken pack: boss (0.567828ms)
+✔ reject unsafe or broken pack: duplicate (1.913899ms)
+✔ reject unsafe or broken pack: noFuel (1.147828ms)
+✔ reject unsafe or broken pack: outside (0.758877ms)
+✔ reject unsafe or broken pack: proto (0.450677ms)
+✔ reject unsafe or broken pack: version (0.712951ms)
+✔ pack file size is bounded before parsing (0.232607ms)
+✔ sound PCM is identical across chunk boundaries and repeated renders (164.138106ms)
+✔ OPT score reuse is bounded, exact and invalidates on every recipe/seed change (410.544222ms)
+✔ music arrangements and seed have reproducible distinct identities (270.281951ms)
+✔ Xbox, generic SNES and disconnected pad states (0.835641ms)
+✔ persisted remapping rejects unknown or unbounded bindings (0.501242ms)
+✔ same seed and tick inputs replay exactly, including the owned mod (37.607907ms)
+✔ steering moves laterally; brake, drag and boost change speed (2.778315ms)
+✔ forward fire respects magazine cost, cooldown and damage (1.480383ms)
+✔ side guns target only the requested side and nearby vehicles (1.031409ms)
+✔ contact damage is bounded by invulnerability; harder mode hits harder (1.688044ms)
+✔ fuel exhaustion opens a recoverable foot stop; loot is single-use (1.705747ms)
+✔ a spent stop and empty tank ends the run without a softlock (1.049874ms)
+✔ outposts only open at low speed and interact is edge-triggered (0.935539ms)
+✔ jump, on-foot fire, pickups and return operate independently of rendering (1.383362ms)
+✔ checkpoint, shop and route choices preserve earned resources (1.338457ms)
+✔ final war rig is required and survives roadside-stop lifecycle (1.150794ms)
+✔ catch-up aborts immediately on mode change and retains shot events (1.049383ms)
+✔ render-frame chunking does not change tick outcomes (2.360188ms)
+✔ modded car, gun, enemy, level and difficulty take effect (1.844759ms)
+✔ invalid replay records fail closed (2.528354ms)
+✔ replay captures the time limit on its final recorded tick (0.858374ms)
+✔ a complete original campaign can be won and replayed from real input decisions (43.635312ms)
+✔ both example vehicle packs complete a full Drifter campaign (88.79028ms)
+✔ default campaign survives an input-driven Survivor run (46.760166ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1028.084223

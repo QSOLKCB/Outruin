@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10272d"><meta name="description" content="An original, moddable wasteland driving and scavenging game. No accounts. No downloads. The gameplay is the prize.">
+  <title>OUTRUIN — The Last Signal</title><link rel="icon" href="assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="masthead"><a class="wordmark" href="./" aria-label="Outruin home">OUT<span>R</span>UIN<span class="edition"> / THE LAST SIGNAL</span></a><div class="header-right"><span class="signal"><i></i> SIGNAL FOUND</span><button id="sound" aria-pressed="true">SOUND ON</button><button id="settings">CONTROLS</button><button id="workshop">WORKSHOP</button></div></header>
+<main>
+  <div class="telemetry" aria-label="Vehicle status">
+    <div><span>ARMOUR</span><strong id="hull">100</strong><meter id="hull-meter" min="0" max="100" value="100">100</meter></div>
+    <div><span>FUEL</span><strong id="fuel">100%</strong><meter id="fuel-meter" min="0" max="100" value="100">100</meter></div>
+    <div><span>ROUNDS</span><strong id="ammo">240</strong><small>FORWARD / SIDE</small></div>
+    <div><span>SALVAGE</span><strong id="scrap">000</strong><small>REPAIR · REFUEL · REBUILD</small></div>
+    <div><span>BOOST</span><strong id="boost">100%</strong><meter id="boost-meter" min="0" max="100" value="100">100</meter></div>
+    <div class="score-cell"><span>SCORE</span><strong id="score">000000</strong><button id="pause" disabled>PAUSE II</button></div>
+  </div>
+  <section class="viewport" aria-label="Outruin game">
+    <canvas id="game" tabindex="0" aria-label="Wasteland driving and scavenging. Keyboard instructions below."></canvas>
+    <div id="menu" class="overlay menu">
+      <div class="menu-copy"><p class="eyebrow">QSOL-IMC PRESENTS / VOL. 01</p><h1>OUT<span>R</span>UIN</h1><p class="tagline">THE GAMEPLAY IS THE PRIZE.</p>
+        <p class="story">The cities went quiet.<br>The highway didn’t.</p><p class="brief">Get the signal core to the coast. Drive hard, fight dirty, and scavenge enough to see the next sunrise.</p>
+        <div class="setup"><label>RUN DIFFICULTY<select id="difficulty"><option value="drifter">DRIFTER / Take the long way</option><option value="survivor" selected>SURVIVOR / The intended run</option><option value="wastelord">WASTELORD / Earn every kilometre</option></select></label><label class="seed-label">WORLD SEED<input id="seed" type="number" min="0" max="4294967295" step="1" value="1988"></label></div>
+        <button id="start" class="primary">START YOUR ENGINE <span>↗</span></button><p class="start-hint">W / ↑ TO ACCELERATE · SPACE TO FIRE</p><p id="pack-label" class="pack-label">CAMPAIGN / THE LAST SIGNAL</p><p id="menu-error" role="alert"></p>
+      </div><div class="route-stamp"><span>TRANSMISSION 001</span><strong>NO ROAD<br>LEADS BACK.</strong><div class="route-line">01 — RUST<br>02 — SALT<br>03 — GLASS</div><small>BUILT TO BE PLAYED.<br>OPEN TO BE CHANGED.</small></div>
+    </div>
+    <div id="paused" class="overlay centered" hidden><div class="panel"><p class="eyebrow">HOLDING FREQUENCY</p><h2>Catch your breath.</h2><p>The road can wait.</p><button id="resume" class="primary">BACK TO THE ROAD →</button><button id="restart">RESTART RUN</button><button id="garage">RETURN TO GARAGE</button></div></div>
+    <div id="depot" class="overlay centered" hidden><div class="panel depot-panel"><p class="eyebrow">RELAY REACHED</p><h2>A little less broken.</h2><p>Spend your salvage. Choose the road ahead.</p><div id="shop" class="shop-grid"></div><div class="route-options"><button id="highway" class="primary">OPEN HIGHWAY <small>Gentler bends. Standard patrols.</small></button><button id="canyon">CANYON CUT <small>Sharper bends. More raiders. +25 scrap.</small></button></div></div></div>
+    <div id="result" class="overlay centered" hidden><div class="panel"><p class="eyebrow" id="result-tag"></p><h2 id="result-title"></h2><p id="result-reason"></p><p id="result-stats" class="result-stats"></p><button id="again" class="primary">ONE MORE RUN ↗</button><button id="journal">DOWNLOAD RUN REPLAY</button><button id="result-garage">BACK TO GARAGE</button></div></div>
+  </section>
+  <div id="touch" class="touch-controls" aria-label="Touch game controls">
+    <div class="touch-steering"><button data-control="left" aria-label="Steer or walk left">◀</button><button data-control="throttle" aria-label="Throttle">GAS</button><button data-control="right" aria-label="Steer or walk right">▶</button><button data-control="brake" aria-label="Brake">BRAKE</button><button data-control="jump" aria-label="Jump">JUMP</button></div>
+    <div class="touch-actions"><button data-control="leftShot" aria-label="Fire left">L GUN</button><button data-control="fire" class="fire" aria-label="Fire">FIRE</button><button data-control="rightShot" aria-label="Fire right">R GUN</button><button data-control="boost">BOOST</button><button data-control="interact" aria-label="Search, stop or return">USE</button></div>
+  </div>
+  <section class="under-road"><div><span class="tiny-label">MISSION CHANNEL</span><p id="objective" aria-live="polite">A machine. A signal. One last run to the coast.</p></div><div class="key-legend"><span><kbd>WASD</kbd> DRIVE</span><span><kbd>SPACE</kbd> FIRE</span><span><kbd>Q / C</kbd> SIDE GUNS</span><span><kbd>E / F</kbd> SCAVENGE</span><span><kbd>J</kbd> JUMP</span><span><kbd>X</kbd> BOOST</span></div></section>
+  <section class="field-notes"><article><span>01 / DRIVE</span><h3>Own the road.</h3><p>Steer through the bends, dodge the haulers, and use your side guns when riders get close. The shoulder costs speed.</p></article><article><span>02 / SURVIVE</span><h3>Nothing runs on hope.</h3><p>Brake and stop once per sector to search the ruins. Recover fuel, ammo, health and salvage. Return to your car with E.</p></article><article><span>03 / REBUILD</span><h3>Make your own wasteland.</h3><p>Open the Workshop. Change the campaign, car, weapons, enemies and music. Export a mod pack. Share another reason to play.</p></article></section>
+</main>
+<footer><span>QSOL-IMC <b> / </b> OUTRUIN v0.1.0</span><span id="offline-status">OFFLINE AFTER FIRST LOAD</span><a href="https://github.com/QSOLKCB/Outruin" target="_blank" rel="noopener">SOURCE & MOD GUIDE ↗</a></footer>
+<dialog id="controls-dialog"><div class="dialog-heading"><div><p class="eyebrow">KNOW YOUR MACHINE</p><h2>Controls & preferences</h2></div><button data-close="controls-dialog" aria-label="Close controls">✕</button></div>
+  <div class="control-columns"><div><h3>Keyboard</h3><table><tr><td>Drive / walk</td><td>WASD / arrows</td></tr><tr><td>Forward / on-foot fire</td><td>Space</td></tr><tr><td>Side guns</td><td>Q / C</td></tr><tr><td>Boost</td><td>X / Shift</td></tr><tr><td>Stop / search / return</td><td>E / F</td></tr><tr><td>Jump on foot</td><td>J</td></tr><tr><td>Pause</td><td>P / Escape</td></tr></table><label class="check"><input id="touch-toggle" type="checkbox"> Always show touch controls</label><button id="fullscreen">ENTER FULLSCREEN</button></div>
+  <div><h3>Controller</h3><p id="pad-status">Connect a controller and press a button.</p><label>PROFILE<select id="profile"><option value="xbox">Xbox / standard gamepad</option><option value="snes">Generic SNES USB</option></select></label><p class="muted">Default Xbox: RT throttle, LT brake, A fire, B boost, X use, Y jump, LB/RB side guns, Start pause. Click an action to remap any button or axis.</p><div id="bindings" class="bindings"></div><p id="binding-status" role="status"></p><button id="reset-bindings">RESET PROFILE</button></div></div>
+  <p class="muted">Release controls before resuming. Phone controls support simultaneous touch. Portrait and landscape are supported; landscape gives you more road.</p></dialog>
+<dialog id="workshop-dialog"><div class="dialog-heading"><div><p class="eyebrow">THE WASTELAND IS YOURS</p><h2>Mod Workshop</h2></div><button data-close="workshop-dialog" aria-label="Close workshop">✕</button></div>
+  <p>Every content pack travels as one JSON file. Apply a pack to return to the garage and start a new campaign.</p>
+  <label>BUNDLED CAMPAIGNS<select id="example-pack"><option value="">Choose an example to edit…</option><option value="the-last-signal">The Last Signal / Dust Kestrel</option><option value="heavy-metal">Heavy Metal / Iron Gospel hauler</option><option value="night-courier">Night Courier / Glass Needle buggy</option></select></label><div class="workshop-toolbar"><button id="export-pack">EXPORT PACK</button><button id="import-pack">IMPORT PACK</button><input id="pack-file" type="file" accept=".json,application/json" hidden><button id="default-pack">LOAD ORIGINAL</button><button id="export-wav">EXPORT SOUNDTRACK WAV</button></div>
+  <div class="quick-edit"><label>CAMPAIGN NAME<input id="edit-name" maxlength="80"></label><label>CAR NAME<input id="edit-car" maxlength="80"></label><label>PAINT<input id="edit-color" type="color"></label><label>TOP SPEED (KM/H)<input id="edit-speed" type="number" min="65" max="388"></label><button id="quick-apply">UPDATE JSON ↓</button></div>
+  <label>FULL CONTENT PACK <span class="muted">Levels · handling · guns · enemies · supplies · shop · difficulty · score</span><textarea id="pack-source" rows="16" spellcheck="false" aria-label="Mod pack JSON"></textarea></label>
+  <p id="mod-status" role="status">Edit any value, then validate and apply.</p><button id="apply-pack" class="primary">VALIDATE & APPLY PACK →</button><p class="muted">Packs contain data only. Graphics and mechanics can also be extended in the open source. <a href="https://github.com/QSOLKCB/Outruin/blob/main/docs/MODDING.md" target="_blank" rel="noopener">Read the modding guide ↗</a></p></dialog>
+<script type="module" src="js/app.js"></script>
+</body></html>
