@@ -56,7 +56,9 @@ Routes are difficulty variants of the next sector: highway uses the normal bend 
 
 `music.scale` contains eight integer frequencies; `music.melody` chooses indices into that scale. `music.bass` contains four low frequencies. Supported melody waveforms are `saw`, `square`, and `triangle`.
 
-The composer adds bass, percussion and kick lanes at absolute sample boundaries. Four phrases rotate the authored melody and bass, with reproducible percussion seeds. Outpost and boss modes change arrangement and tempo within a bounded range. **EXPORT SOUNDTRACK WAV** renders all four phrases of the editor's road arrangement with the garage seed, including seed zero. Each phrase ends on a simulation tick. The same pack and seed give the same reference PCM. Change the source composer for new instruments, channel counts or song forms.
+The composer adds bass, percussion and kick lanes at absolute sample boundaries. Eight phrases rotate the authored melody and bass through an intro, variations, a breakdown and a turnaround. Three regional mixes change the note and bass patterns; outpost and boss mixes change density and tempo. Choose a mix in **Wasteland radio & effects**, then **AUDITION RADIO** or **EXPORT RADIO WAV**. The editor's draft and garage seed, including seed zero, determine the complete score. Every phrase ends on a simulation tick; the same pack, seed and mix give the same reference PCM.
+
+Effect auditions and WAV exports use variant `effectVariant(seed, 0, kind)`. During play the event tick selects the variant. Effect timbres and engine bands are authored in `js/sfx.js`; they are source recipes, not additional fields in `outruin.mod.v1`. Music remains editable with the existing pack schema. Change `js/radio.js` for new instruments or song forms. See [audio details](AUDIO.md).
 
 ## New mechanics and custom art
 
@@ -68,7 +70,7 @@ Content is deliberately separate from mechanics. Everything is open source, but 
 | A new gun or damage rule | `js/sim.js` `roadShot` / `footTick`, input action map, schema and tests |
 | Custom vehicle geometry or sprite loading | `js/render.js` `car`; preserve a local allowlisted asset path and add it to `scripts/build.py` |
 | New route topology, missions or world interactions | `js/sim.js`, then the renderer and UI state transitions |
-| Another soundtrack form or SFX timbre | `js/sound.js`; retain sample-range and cache parity tests |
+| Another soundtrack form or SFX timbre | `js/radio.js` / `js/sfx.js`; playback in `js/sound.js`; retain PCM range and lifecycle tests |
 | More controller actions | `js/config.js`, `js/input.js`, HTML controls, replay format and tests |
 | A larger mod contract | Version the schema and update replay compatibility deliberately |
 

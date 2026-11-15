@@ -3,7 +3,9 @@ import {FixedClock} from '../vendor/vanillajs/modules/time/index.js';
 import {createGame,command,runRecord,snapshot} from './sim.js';
 import {DEFAULT_PACK,parsePack,serializePack,packFingerprint} from './mod.js';
 import {Renderer} from './render.js';
-import {Sound,compileSoundtrack} from './sound.js';
+import {Sound,compileSoundtrack,DEFAULT_MIX} from './sound.js';
+import {RADIO_MIXES} from './radio.js';
+import {EFFECTS,compileEffect,effectVariant} from './sfx.js';
 import {Controls,ACTIONS,PROFILES,validBindings} from './input.js';
 import {advanceFrame} from './frame.js';
 const $=id=>document.getElementById(id);
@@ -20,6 +22,11 @@ const controls=new Controls({playing:()=>started&&['road','foot'].includes(state
 const oldProfile=read('profile');if(oldProfile==='snes')controls.profile='snes';$('profile').value=controls.profile;
 try{const bindings=JSON.parse(read('bindings'));if(validBindings(bindings))controls.custom=bindings;}catch{}
 sound.setEnabled(read('sound')!=='off');updateSound();
+try{const stored=JSON.parse(read('mix'));if(stored)sound.setMix(stored);}catch{}
+for(const name of Object.keys(DEFAULT_MIX)){const input=$('mix-'+name),output=$('mix-'+name+'-value');input.value=sound.mix[name];output.value=sound.mix[name]+'%';
+  input.addEventListener('input',()=>{sound.setMix({...sound.mix,[name]:Number(input.value)});output.value=input.value+'%';save('mix',JSON.stringify(sound.mix));});}
+for(const mix of RADIO_MIXES){const option=document.createElement('option');option.value=mix.id;option.textContent=mix.label;$('radio-mix').append(option);}
+for(const [id,label] of Object.entries(EFFECTS)){const option=document.createElement('option');option.value=id;option.textContent=label;$('effect-mix').append(option);}
 $('touch-toggle').checked=read('touch')==='on';document.body.classList.toggle('show-touch',$('touch-toggle').checked);
 function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 function clear(){controls.clear();clock.reset();clock.presentation=null;clock.renderAlpha=1;last=0;}
@@ -69,13 +76,14 @@ function renderShop(){
     const b=document.createElement('button');b.dataset.buy=key;b.textContent=names[key];
     const d=document.createElement('small');d.textContent=item.cost+' SCRAP / '+(key==='fuel'?Math.round(item.amount/1000)+' FUEL':key==='engine'?'+'+item.amount+'% SPEED':key==='gun'?'+'+item.amount+' DAMAGE':'+'+item.amount);b.append(d);
     b.disabled=state.scrap<item.cost||(key==='engine'&&Boolean(state.engine))||(key==='gun'&&Boolean(state.gun));
-    b.addEventListener('click',()=>{if(command(state,'buy',key)){sound.event({type:'pickup'});renderShop();updateUI();}});grid.append(b);
+    b.addEventListener('click',()=>{if(command(state,'buy',key)){sound.event({type:'pickup',kind:key,tick:state.tick,space:'ui'},state);renderShop();updateUI();}});grid.append(b);
   }
 }
 function nextRoute(route){if(command(state,'route',route)){clear();paused=false;clock.setPaused(false);lastMode=state.mode;updateUI();$('game').focus({preventScroll:true});}}
 function showDialog(id){if(started&&['road','foot'].includes(state.mode))togglePause(true);clear();sound.stop();$(id).showModal();updateUI();}
-for(const d of document.querySelectorAll('dialog'))d.addEventListener('close',()=>{importToken++;controls.cancelBind();clear();updateUI();});
-for(const button of document.querySelectorAll('[data-close]'))button.addEventListener('click',()=>$(button.dataset.close).close());
+for(const d of document.querySelectorAll('dialog'))d.addEventListener('close',()=>{importToken++;sound.stopPreview();controls.cancelBind();clear();updateUI();});
+for(const d of document.querySelectorAll('dialog'))d.addEventListener('cancel',()=>sound.stopPreview());
+for(const button of document.querySelectorAll('[data-close]'))button.addEventListener('click',()=>{sound.stopPreview();$(button.dataset.close).close();});
 $('start').onclick=start;$('again').onclick=start;$('restart').onclick=start;$('garage').onclick=garage;$('result-garage').onclick=garage;
 $('pause').onclick=()=>togglePause(!paused);$('resume').onclick=()=>togglePause(false);
 $('highway').onclick=()=>nextRoute('highway');$('canyon').onclick=()=>nextRoute('canyon');
@@ -89,7 +97,7 @@ function renderBindings(){const container=$('bindings');container.replaceChildre
     button.onclick=()=>{controls.bind(action);$('binding-status').textContent='Release the pad, then press a button or move an axis for '+action+'.';};container.append(button);}}
 $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{$('binding-status').textContent='Fullscreen is unavailable in this browser. Landscape mode also works.';}};
 $('journal').onclick=()=>download('outruin-run-'+state.seed+'.json',new Blob([JSON.stringify(runRecord(state))],{type:'application/json'}));
-function fillWorkshop(p){$('pack-source').value=serializePack(p);$('edit-name').value=p.name;$('edit-car').value=p.vehicle.name;$('edit-color').value=p.vehicle.color;$('edit-speed').value=Math.round(p.vehicle.topSpeed*.216);}
+function fillWorkshop(p){sound.stopPreview();$('pack-source').value=serializePack(p);$('edit-name').value=p.name;$('edit-car').value=p.vehicle.name;$('edit-color').value=p.vehicle.color;$('edit-speed').value=Math.round(p.vehicle.topSpeed*.216);}
 $('workshop').onclick=()=>{importToken++;$('example-pack').value='';fillWorkshop(pack);$('mod-status').textContent='Edit any value, then validate and apply.';showDialog('workshop-dialog');};
 $('default-pack').onclick=()=>{importToken++;fillWorkshop(DEFAULT_PACK);$('mod-status').textContent='Original pack loaded into the editor. Apply to activate.';};
 $('quick-apply').onclick=()=>{importToken++;try{const draft=JSON.parse($('pack-source').value);draft.name=$('edit-name').value;draft.vehicle.name=$('edit-car').value;draft.vehicle.color=$('edit-color').value;draft.vehicle.topSpeed=Math.round(Number($('edit-speed').value)/.216);const valid=parsePack(serializePack(draft));fillWorkshop(valid);$('mod-status').textContent='Quick edits added. Apply to activate.';}catch(e){$('mod-status').textContent=e.message;}};
@@ -97,17 +105,35 @@ $('apply-pack').onclick=()=>{try{const next=parsePack($('pack-source').value);pa
 $('export-pack').onclick=()=>{try{const draft=parsePack($('pack-source').value);download('outruin-'+draft.id+'.json',new Blob([serializePack(draft)],{type:'application/json'}));$('mod-status').textContent='Validated mod pack exported.';}catch(e){$('mod-status').textContent='Export rejected: '+e.message;}};
 $('import-pack').onclick=()=>$('pack-file').click();
 $('pack-file').onchange=async()=>{const file=$('pack-file').files[0];if(!file)return;const token=++importToken;try{if(file.size>65536)throw new Error('File exceeds 64 KiB');const next=parsePack(await file.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Imported '+next.name+'. Apply to start a new campaign.';}catch(e){$('mod-status').textContent='Import rejected: '+e.message;}finally{$('pack-file').value='';}};
-$('pack-source').addEventListener('input',()=>importToken++);
+$('pack-source').addEventListener('input',()=>{importToken++;sound.stopPreview();});
 $('example-pack').onchange=async()=>{const id=$('example-pack').value;if(!['the-last-signal','heavy-metal','night-courier'].includes(id))return;const token=++importToken;try{const response=await fetch('mods/'+id+'.json');if(!response.ok)throw new Error('Example could not be loaded');const next=parsePack(await response.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Example loaded. Edit or Apply to drive it.';}catch(e){if(token===importToken)$('mod-status').textContent=e.message;}};
-$('export-wav').onclick=()=>{try{const draft=parsePack($('pack-source').value);const seedInput=$('seed');if(seedInput.value===''||!seedInput.checkValidity())throw new RangeError('Choose a whole-number seed from 0 to 4294967295.');const score=compileSoundtrack(draft,Number(seedInput.value));download('outruin-'+draft.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('mod-status').textContent='Complete four-phrase 48 kHz PCM soundtrack exported.';}catch(e){$('mod-status').textContent=e.message;}};
-addEventListener('blur',()=>{if(started&&['road','foot'].includes(state.mode))togglePause(true);});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)togglePause(true);});
+function workshopAudio(){
+  const draft=parsePack($('pack-source').value),seedInput=$('seed');
+  if(seedInput.value===''||!seedInput.checkValidity())throw new RangeError('Choose a whole-number seed from 0 to 4294967295.');
+  return {draft,seed:Number(seedInput.value),mix:RADIO_MIXES.find(m=>m.id===$('radio-mix').value)};
+}
+$('export-wav').onclick=()=>{try{const {draft,seed,mix}=workshopAudio(),score=compileSoundtrack(draft,seed,mix.arrangement,mix.sector);
+  download('outruin-'+draft.id+'-'+mix.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('audio-status').textContent='Complete eight-phrase '+mix.label+' loop exported.';
+}catch(e){$('audio-status').textContent=e.message;}};
+$('preview-radio').onclick=async()=>{try{const {draft,seed,mix}=workshopAudio(),score=compileSoundtrack(draft,seed,mix.arrangement,mix.sector);
+  const pending=sound.audition(score),token=sound.previewToken,played=await pending;if((token===sound.previewToken||sound.failed)&&$('workshop-dialog').open)$('audio-status').textContent=played?'Auditioning '+mix.label+'.':sound.enabled?'Audio preview unavailable.':'Turn SOUND ON to audition.';
+}catch(e){$('audio-status').textContent=e.message;}};
+function workshopEffect(){const {seed}=workshopAudio(),kind=$('effect-mix').value;return {kind,score:compileEffect(kind,effectVariant(seed,0,kind))};}
+$('preview-effect').onclick=async()=>{try{const {kind,score}=workshopEffect(),pending=sound.audition(score),token=sound.previewToken,played=await pending;
+  if((token===sound.previewToken||sound.failed)&&$('workshop-dialog').open)$('audio-status').textContent=played?'Auditioning '+EFFECTS[kind]+'.':sound.enabled?'Audio preview unavailable.':'Turn SOUND ON to audition.';
+}catch(e){$('audio-status').textContent=e.message;}};
+$('export-effect').onclick=()=>{try{const {kind,score}=workshopEffect();download('outruin-'+kind+'.wav',new Blob([score.wav()],{type:'audio/wav'}));$('audio-status').textContent=EFFECTS[kind]+' WAV exported.';}catch(e){$('audio-status').textContent=e.message;}};
+$('stop-preview').onclick=()=>{sound.stopPreview();$('audio-status').textContent='Audition stopped.';};
+for(const id of ['radio-mix','effect-mix'])$(id).addEventListener('change',()=>{sound.stopPreview();$('audio-status').textContent='Ready to audition or export.';});
+
+addEventListener('blur',()=>{sound.stopPreview();if(started&&['road','foot'].includes(state.mode))togglePause(true);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)sound.stopPreview();if(document.hidden&&started)togglePause(true);});
 addEventListener('pagehide',()=>{sound.stop();controls.clear();clock.setPaused(true);});
 addEventListener('pageshow',e=>{if(e.persisted){last=0;if(started)togglePause(true);}});
 function frame(now){
   const elapsed=last?Math.max(0,(now-last)/1000):0;last=now;const pm=controls.poll();
   if(started&&!paused&&!dialogs()&&['road','foot'].includes(state.mode)){
-    if(clock.paused)clock.setPaused(false);const beforeTick=state.tick;const events=advanceFrame(clock,state,controls.mask(pm),elapsed);if(state.tick>beforeTick)controls.consume();for(const e of events)sound.event(e);
+    if(clock.paused)clock.setPaused(false);const beforeTick=state.tick;const events=advanceFrame(clock,state,controls.mask(pm),elapsed);if(state.tick>beforeTick)controls.consume();sound.playEvents(events,state);
     if(state.mode!==lastMode){controls.clear();lastMode=state.mode;updateUI();}
   }
   renderer.draw(state,paused||dialogs()?1:clock.renderAlpha??1,clock.presentation?.state===state?clock.presentation.previous:null);sound.sync(state,!started||paused||dialogs());

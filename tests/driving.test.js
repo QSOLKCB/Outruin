@@ -67,8 +67,8 @@ test('extreme grip, steering and top-speed values stay finite and bounded',()=>{
     for(let i=0;i<1200;i++){step(s,I.throttle|I.boost|(i%80<40?I.right:I.left));assert.ok(Number.isFinite(s.x)&&Math.abs(s.x)<=1550);assert.ok(Math.abs(s.steering)<=1000);}
   }
 });
-test('four-phrase soundtrack exports the complete tick-aligned loop',()=>{
-  const a=compileSoundtrack(DEFAULT_PACK,0),b=compileSoundtrack(DEFAULT_PACK,0);assert.equal(a.phraseCount,4);assert.equal(a.loopTicks,960);
+test('eight-phrase soundtrack exports the complete tick-aligned loop',()=>{
+  const a=compileSoundtrack(DEFAULT_PACK,0),b=compileSoundtrack(DEFAULT_PACK,0);assert.equal(a.phraseCount,8);assert.equal(a.loopTicks,1920);
   assert.notDeepEqual(a.renderPhrase(0),a.renderPhrase(1));assert.deepEqual(a.renderPhrase(2),b.renderPhrase(2));
   const wav=a.wav();assert.equal(wav.length,44+a.frames*2);assert.equal(new DataView(wav.buffer).getUint32(40,true),a.frames*2);
   assert.deepEqual(a.position(a.loopTicks),a.position(0));assert.equal(a.position(240).phrase,1);
@@ -76,7 +76,7 @@ test('four-phrase soundtrack exports the complete tick-aligned loop',()=>{
 });
 test('audio device failure is contained and preserves the enabled preference',async()=>{
   const sound=new Sound(),oldWarn=console.warn;console.warn=()=>{};
-  try{sound.context={state:'running',currentTime:0,createBuffer(){throw new Error('lost device');}};
+  try{sound.buses={music:{}};sound.context={state:'running',currentTime:0,createBuffer(){throw new Error('lost device');}};
     assert.doesNotThrow(()=>sound.sync(createGame()));assert.equal(sound.failed,true);assert.equal(sound.enabled,true);assert.equal(sound.music,null);
     assert.doesNotThrow(()=>sound.sync(createGame()));
   }finally{console.warn=oldWarn;}

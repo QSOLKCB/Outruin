@@ -18,6 +18,8 @@
 
 **0.2 — Road Reborn:** speed-sensitive steering, continuous bends, matching road/shoulder coordinates, a rebuilt chase view, visible enemy rounds you can dodge, and a longer VANILLAJS soundtrack. [What changed and how it was checked](docs/ROAD_REBORN.md).
 
+**Now transmitting — Wasteland Radio:** five eight-phrase arrangements, layered deterministic effects, engine/boost/tyre audio, separate volume controls, and Workshop auditions with WAV exports. [Audio notes](docs/AUDIO.md).
+
 [Play in your browser](https://qsolkcb.github.io/Outruin/) · [Modding guide](docs/MODDING.md) · [Controls](#know-your-machine) · [Engineering](docs/ARCHITECTURE.md) · [Roadmap](ROADMAP.md)
 
 </div>
@@ -46,8 +48,8 @@ This is the first playable campaign, not a claim of feature parity with either i
 | **Progression** | Spend scrap on repairs, fuel, ammunition, an engine tune or a stronger forward gun |
 | **Route choice** | Open highway or sharper canyon bends with more patrols and hazard pay |
 | **Difficulty** | Drifter, Survivor and Wastelord alter damage, patrol frequency and supply pressure |
-| **Sound** | Four-phrase industrial/chiptune loops, each with four lanes; road, outpost and boss arrangements |
-| **Workshop** | Edit, validate, import and export complete JSON content packs; export soundtrack WAVs |
+| **Sound** | Eight-phrase industrial/chiptune scores for three regions, outposts and the boss; layered PCM weapons, impacts, supplies and engine sounds |
+| **Workshop** | Edit, validate, import and export complete JSON content packs; audition and export each radio mix or effect |
 | **Input** | Keyboard, remappable Xbox/standard and generic SNES profiles, simultaneous touch controls |
 | **Offline** | A versioned local cache after the first successful load; no runtime CDNs or services |
 | **Replay evidence** | Download a tick-input record with the exact campaign pack and shop/route decisions |
@@ -107,9 +109,11 @@ Android and iOS receive touch controls automatically. Desktop users can enable t
 
 ## A radio that can be reproduced
 
-The soundtrack is composed as four varied phrases, each with four lanes, through VANILLAJS `soundtrack` and `audio2d` into **48 kHz mono PCM16**. The default road loop lasts 16 seconds. The same pack, seed and arrangement generate the same reference samples. Road, scavenging and boss arrangements use distinct musical patterns. Export the complete road loop as a WAV from the Workshop. Playback resumes from the simulation tick after a pause; an audio-device failure leaves gameplay and your saved sound preference intact.
+The soundtrack uses eight phrases with four lanes through VANILLAJS `soundtrack` and `audio2d`: an intro, variations, a fill, a breakdown, a build and a turnaround. The default road loop lasts **32 seconds**. Rust, Salt and Glass have different arrangements; outposts slow things down and the war rig pushes the tempo. The same pack, seed and mix generate the same **48 kHz mono PCM16** reference samples.
 
-Playback timing, browser resampling and the audio device are separate from reference-PCM determinism. The sound-effects presentation uses Web Audio oscillators. We do not claim that speakers or every browser produce bit-identical output.
+Weapons, impacts, explosions, footsteps, supplies and eight engine bands now use layered VANILLAJS PCM too. Effect variants come from the run seed and event tick; directional shots are panned at playback. **CONTROLS** has separate music, effects and engine levels. **WORKSHOP** can audition or export any radio mix and effect. Playback resumes at the simulation tick after a pause; a device failure leaves gameplay and saved sound preferences intact.
+
+Playback timing, Web Audio mixing/resampling and physical speakers remain separate from reference-PCM determinism. [Recipes, compatibility and verification](docs/AUDIO.md).
 
 ## Built from the QSOLKCB toolbox
 

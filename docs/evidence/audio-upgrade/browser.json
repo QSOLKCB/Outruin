@@ -1,0 +1,100 @@
+{
+  "status": "PASS",
+  "root": "/workspace/scratch/c1269e1fd4e9/Outruin/dist",
+  "checks": [
+    {
+      "name": "garage and original presentation",
+      "status": "PASS"
+    },
+    {
+      "name": "keyboard steering, throttle and toolbar-focused Space fire",
+      "status": "PASS"
+    },
+    {
+      "name": "pause cancels input and prevents simulation/audio progress",
+      "status": "PASS"
+    },
+    {
+      "name": "OPT background cache matches reference pixels for every biome and foot view",
+      "status": "PASS"
+    },
+    {
+      "name": "stationary steering, road projection and interpolated frames agree",
+      "status": "PASS"
+    },
+    {
+      "name": "road surface has no terrain-coloured seams between depth strips",
+      "status": "PASS"
+    },
+    {
+      "name": "upgraded road, target warnings and all three biomes render",
+      "status": "PASS"
+    },
+    {
+      "name": "a failed audio device cannot stop the render loop or overwrite preferences",
+      "status": "PASS"
+    },
+    {
+      "name": "PCM engine and boost follow driving input and all game voices stop on pause",
+      "status": "PASS"
+    },
+    {
+      "name": "outpost movement, loot and return through keyboard",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint shop, route and final victory UI",
+      "status": "PASS"
+    },
+    {
+      "name": "WAV export uses seed zero rather than the default seed",
+      "status": "PASS"
+    },
+    {
+      "name": "Workshop previews use selected mixes, survive paused frames and cancel on edit or close",
+      "status": "PASS"
+    },
+    {
+      "name": "selected boss and effect WAVs match the Node reference bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "music, effects and engine sliders persist independently across reload",
+      "status": "PASS"
+    },
+    {
+      "name": "shop cache invalidates when modded prices change without changing resources",
+      "status": "PASS"
+    },
+    {
+      "name": "mod validation, bundled custom car and export are usable",
+      "status": "PASS"
+    },
+    {
+      "name": "controller profiles and remap capture simulated pad",
+      "status": "PASS"
+    },
+    {
+      "name": "focus loss and controller disconnect pause safely",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile layouts and simultaneous touch input",
+      "status": "PASS"
+    },
+    {
+      "name": "radio and mixer dialogs fit narrow screens and preview stops on focus loss",
+      "status": "PASS"
+    },
+    {
+      "name": "offline reload retains full game and mod examples",
+      "status": "PASS"
+    },
+    {
+      "name": "runtime has no uncaught browser errors",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "browser": "141.0.7390.37"
+}

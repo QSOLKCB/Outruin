@@ -31,7 +31,15 @@
 - Physical junctions, authored branching campaign maps and optional jobs.
 - Moving roadblocks, richer convoy AI and more varied scavenging layouts.
 
-## Next: The Long Radio (not implemented)
+## Wasteland Radio (implemented)
+
+- Eight phrases per score, three regional road mixes, outpost and boss arrangements.
+- Deterministic layered weapons, impacts, supplies, steps and eight engine bands.
+- Engine, boost and tyre layers; spatial effect playback and separate saved volume controls.
+- Workshop mix/effect auditions and complete PCM WAV exports.
+- Seed/tick effect recipes, bounded voices and lifecycle/device-recovery checks.
+
+## Next: The Radio Foundry (not implemented)
 
 - Visual pattern/timeline music editor and a replay viewer.
 - Shareable challenge packs and locally stored best-run ghosts.

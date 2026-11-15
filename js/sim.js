@@ -19,7 +19,7 @@ export function createGame({seed=1988,difficulty='survivor',pack=DEFAULT_PACK}={
 export function bendAt(distance,sector=0,route='highway',bends=DEFAULT_PACK.bends) {
   return roadBend(distance,sector,route,bends);
 }
-function event(s,type,extra={}){s.events.push({type,tick:s.tick,...extra});}
+function event(s,type,extra={}){s.events.push({type,tick:s.tick,space:s.mode==='foot'?'foot':'road',listenerX:s.mode==='foot'?s.foot.x:s.x,...extra});}
 function say(s,text){s.notice=text;s.noticeUntil=s.tick+210;}
 function hurt(s,amount,foot=false) {
   if(s.invulnerable>0)return;
@@ -95,8 +95,8 @@ function roadTick(s,m,edge) {
           s.projectiles.push({id:s.nextId++,x:e.x,z:e.z,vx:clamp((s.x-e.x)/flight,-18,18),damage:s.pack.enemies[e.kind].damage,ttl:180});}}
     }
     if(Math.abs(delta)<10000&&Math.abs(e.x-s.x)<210){
-      if(e.kind==='fuel'){s.fuel=Math.min(v.fuelCapacity,s.fuel+s.pack.rules.roadFuel);e.dead=true;event(s,'pickup');say(s,'Fuel salvaged');}
-      else if(e.kind==='ammo'){s.ammo=Math.min(999,s.ammo+s.pack.rules.roadAmmo);e.dead=true;event(s,'pickup');say(s,'Ammunition salvaged');}
+      if(e.kind==='fuel'){s.fuel=Math.min(v.fuelCapacity,s.fuel+s.pack.rules.roadFuel);e.dead=true;event(s,'pickup',{kind:'fuel'});say(s,'Fuel salvaged');}
+      else if(e.kind==='ammo'){s.ammo=Math.min(999,s.ammo+s.pack.rules.roadAmmo);e.dead=true;event(s,'pickup',{kind:'ammo'});say(s,'Ammunition salvaged');}
       else {hurt(s,e.kind==='truck'?s.pack.enemies.truck.damage:s.pack.rules.collisionDamage);s.speed=Math.trunc(s.speed*.65);e.z=s.distance-16000;}
     }
   }
@@ -124,7 +124,7 @@ function roadTick(s,m,edge) {
   }
 }
 function collect(s,crate) {
-  crate.taken=true;event(s,'pickup');s.score+=75;
+  crate.taken=true;event(s,'pickup',{kind:crate.kind});s.score+=75;
   if(crate.kind==='fuel'){s.fuel=Math.min(s.pack.vehicle.fuelCapacity,s.fuel+s.pack.foot.fuel);say(s,'Fuel drums recovered');}
   if(crate.kind==='ammo'){s.ammo=Math.min(999,s.ammo+s.pack.foot.ammo);say(s,'Ammunition recovered');}
   if(crate.kind==='health'){s.health=Math.min(100,s.health+s.pack.foot.health);s.hull=Math.min(s.pack.vehicle.armour,s.hull+s.pack.foot.repair);say(s,'Medical supplies and repair parts recovered');}
@@ -133,6 +133,7 @@ function collect(s,crate) {
 function footTick(s,m,edge) {
   const f=s.foot,dir=(has(m,'right')?1:0)-(has(m,'left')?1:0);
   f.x=clamp(f.x+dir*s.pack.foot.speed,40,s.pack.foot.width-30);if(dir)f.facing=dir;
+  if(dir&&f.y===0&&s.tick%12===0)event(s,'step');
   if(has(edge,'jump')&&f.y===0)f.vy=s.pack.foot.jump;
   f.y=Math.max(0,f.y+f.vy);if(f.y>0)f.vy--;else f.vy=0;
   if(f.shot>0)f.shot--;
@@ -141,12 +142,12 @@ function footTick(s,m,edge) {
   for(const e of f.enemies){if(e.hp<=0)continue;
     const d=f.x-e.x;
     if(Math.abs(d)<700){if(Math.abs(d)>220)e.x+=Math.sign(d)*2;
-      if(--e.cooldown<=0){e.cooldown=s.pack.foot.enemyInterval;f.bullets.push({x:e.x,y:25,v:Math.sign(d)*7,enemy:true,ttl:120});event(s,'enemy-shot');}}
+      if(--e.cooldown<=0){e.cooldown=s.pack.foot.enemyInterval;f.bullets.push({x:e.x,y:25,v:Math.sign(d)*7,enemy:true,ttl:120});event(s,'enemy-shot',{x:e.x});}}
     if(Math.abs(d)<30&&f.y<28)hurt(s,7,true);
   }
   for(const b of f.bullets){b.x+=b.v;b.ttl--;
     if(b.enemy){if(Math.abs(b.x-f.x)<20&&Math.abs(b.y-(f.y+25))<28){hurt(s,s.pack.foot.enemyDamage,true);b.ttl=0;}}
-    else for(const e of f.enemies){if(e.hp>0&&Math.abs(b.x-e.x)<24&&b.y<65){e.hp-=s.pack.weapons.foot.damage;b.ttl=0;if(e.hp<=0){s.kills++;s.score+=120;s.scrap+=15;event(s,'explode');}break;}}
+    else for(const e of f.enemies){if(e.hp>0&&Math.abs(b.x-e.x)<24&&b.y<65){e.hp-=s.pack.weapons.foot.damage;b.ttl=0;if(e.hp<=0){s.kills++;s.score+=120;s.scrap+=15;event(s,'explode',{x:e.x});}break;}}
   }
   f.bullets=f.bullets.filter(b=>b.ttl>0&&b.x>0&&b.x<s.pack.foot.width+100);
   if(has(edge,'interact')){
@@ -181,7 +182,7 @@ export function command(s,type,value,{record=true}={}) {
     if(value==='fuel')s.fuel=Math.min(s.pack.vehicle.fuelCapacity,s.fuel+item.amount);
     if(value==='ammo')s.ammo=Math.min(999,s.ammo+item.amount);
     if(value==='engine')s.engine=item.amount;if(value==='gun')s.gun=item.amount;
-    event(s,'pickup');
+    event(s,'pickup',{kind:value,space:'ui'});
   } else if(type==='route'&&['highway','canyon'].includes(value)&&s.sector<s.pack.sectors.length-1) {
     s.sector++;s.route=value;s.distance=0;s.speed=0;s.x=0;s.vx=0;s.steering=0;s.slip=0;s.entities=[];s.particles=[];s.tracers=[];s.projectiles=[];s.visited=false;s.foot=null;
     s.mode='road';s.lastMask=0;s.spawnIn=150;s.invulnerable=90;s.score+=500;if(value==='canyon')s.scrap+=25;

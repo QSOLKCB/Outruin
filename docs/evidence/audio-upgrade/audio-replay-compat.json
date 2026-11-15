@@ -1,0 +1,42 @@
+{
+  "base": "ce9ac790fa8274c60268195918c3d32e09f68312",
+  "method": "Replay four complete input/command journals with the baseline sim.js and compare final snapshots with the upgraded simulation. All baseline simulation imports verified byte-identical.",
+  "results": [
+    {
+      "pack": "last-signal",
+      "difficulty": "drifter",
+      "ticks": 9584,
+      "commands": 3,
+      "mode": "won",
+      "snapshotSHA256": "893e3da651ededc4523d3e1d81d30c26dae34e2c21793369fa25d9b9b12f99e1",
+      "status": "PASS"
+    },
+    {
+      "pack": "last-signal",
+      "difficulty": "survivor",
+      "ticks": 9584,
+      "commands": 3,
+      "mode": "won",
+      "snapshotSHA256": "1366c761b8823c48568477ee6ef160ddd05d3274368879cb047ffc2153d1e05b",
+      "status": "PASS"
+    },
+    {
+      "pack": "heavy-metal",
+      "difficulty": "drifter",
+      "ticks": 13560,
+      "commands": 3,
+      "mode": "won",
+      "snapshotSHA256": "fa0eae5f4739e3eef74fb318f81e21b1e289b77b71655181dcdb84c46ebc9172",
+      "status": "PASS"
+    },
+    {
+      "pack": "night-courier",
+      "difficulty": "drifter",
+      "ticks": 7830,
+      "commands": 3,
+      "mode": "won",
+      "snapshotSHA256": "6522ef407ceed968ab7938048c8bda77c958f32bb9a4d93201f47f6a4b468944",
+      "status": "PASS"
+    }
+  ]
+}
