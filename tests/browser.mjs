@@ -21,6 +21,46 @@ try{
   const page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url+'/?test=1');await page.waitForFunction(()=>window.outruinTest);
   await check('garage and original presentation',async()=>{assert.ok(await page.locator('#start').isVisible());await page.screenshot({path:path.join(out,'menu.png'),fullPage:true});});
+  const wholeGameFits=()=>page.evaluate(()=>{
+    const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height};};
+    const boxes=['.masthead','.telemetry','.viewport','#game','.under-road'].map(rect);
+    if(getComputedStyle(document.querySelector('#touch')).display!=='none')boxes.push(rect('#touch'));
+    return {boxes,width:innerWidth,height:innerHeight,scroll:document.documentElement.scrollHeight,canvasFit:getComputedStyle(document.querySelector('#game')).objectFit};
+  });
+  const assertWholeGame=async()=>{const g=await wholeGameFits();assert.ok(g.boxes.every(b=>b.top>=-1&&b.left>=-1&&b.bottom<=g.height+1&&b.right<=g.width+1&&b.height>0),JSON.stringify(g));assert.ok(g.scroll<=g.height+1,JSON.stringify(g));assert.equal(g.canvasFit,'contain');};
+  await check('Fit window keeps the full game, HUD and controls visible at desktop and laptop sizes',async()=>{
+    assert.equal(await page.locator('#display-mode').inputValue(),'fit');await page.click('#start');
+    for(const [width,height] of [[1836,890],[1366,650],[1280,600]]){await page.setViewportSize({width,height});await assertWholeGame();
+      if(width===1836)await page.screenshot({path:path.join(out,'display-fit-desktop.png'),fullPage:true});}
+    await page.keyboard.press('KeyP');await page.click('#garage');await page.setViewportSize({width:1440,height:1050});
+  });
+  await check('fullscreen selector enters native fullscreen, keeps dialogs reachable and restores the window mode',async()=>{
+    await page.selectOption('#display-mode','page');await page.click('#start');await page.keyboard.down('KeyW');await page.waitForFunction(()=>outruinTest.state().speed>0);
+    await page.selectOption('#display-mode','fullscreen');await page.waitForFunction(()=>Boolean(document.fullscreenElement)&&!document.querySelector('#display-mode').disabled);
+    await page.keyboard.up('KeyW');assert.equal(await page.locator('#display-mode').inputValue(),'fullscreen');await assertWholeGame();
+    assert.ok(await page.locator('#paused').isVisible());assert.equal(await page.evaluate(()=>outruinTest.controls.keys.size),0);
+    const tick=await page.evaluate(()=>outruinTest.state().tick);await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>outruinTest.state().tick),tick);
+    await page.click('#settings');assert.equal(await page.locator('#fullscreen').innerText(),'EXIT FULLSCREEN');await page.locator('[data-close="controls-dialog"]').click();
+    // Native fullscreenchange also covers exits initiated by the browser (Esc).
+    await page.evaluate(()=>document.exitFullscreen());await page.waitForFunction(()=>!document.fullscreenElement&&document.querySelector('#display-mode').value==='page');
+    await page.selectOption('#display-mode','fit');await assertWholeGame();await page.click('#garage');
+  });
+  await check('denied fullscreen falls back to Fit window and windowed choices survive reload',async()=>{
+    await page.click('#start');await page.evaluate(()=>{window.originalFullscreen=document.documentElement.requestFullscreen;document.documentElement.requestFullscreen=()=>Promise.reject(new DOMException('Injected denial','NotAllowedError'));});
+    await page.selectOption('#display-mode','fullscreen');await page.waitForFunction(()=>!document.querySelector('#display-mode').disabled&&document.querySelector('#display-status').textContent.includes('unavailable'));
+    assert.equal(await page.locator('#display-mode').inputValue(),'fit');assert.equal(await page.evaluate(()=>Boolean(document.fullscreenElement)),false);await assertWholeGame();
+    await page.evaluate(()=>{document.documentElement.requestFullscreen=window.originalFullscreen;});
+    await page.selectOption('#display-mode','page');await page.reload();await page.waitForFunction(()=>window.outruinTest);assert.equal(await page.locator('#display-mode').inputValue(),'page');
+    await page.selectOption('#display-mode','fit');await page.reload();await page.waitForFunction(()=>window.outruinTest);assert.equal(await page.locator('#display-mode').inputValue(),'fit');
+  });
+  await check('short fullscreen garage and pause menus stay usable through the Controls shortcut',async()=>{
+    await page.setViewportSize({width:844,height:390});await page.click('#settings');await page.click('#fullscreen');
+    await page.waitForFunction(()=>Boolean(document.fullscreenElement)&&!document.querySelector('#fullscreen').disabled);
+    await page.locator('[data-close="controls-dialog"]').click();await page.locator('#start').scrollIntoViewIfNeeded();await page.click('#start');await assertWholeGame();
+    await page.keyboard.press('KeyP');await page.locator('#garage').scrollIntoViewIfNeeded();await page.click('#garage');
+    await page.click('#settings');await page.click('#fullscreen');await page.waitForFunction(()=>!document.fullscreenElement&&!document.querySelector('#fullscreen').disabled);
+    assert.equal(await page.locator('#display-mode').inputValue(),'fit');await page.locator('[data-close="controls-dialog"]').click();await page.setViewportSize({width:1440,height:1050});
+  });
   await check('keyboard steering, throttle and toolbar-focused Space fire',async()=>{
     await page.click('#start');await page.keyboard.down('KeyW');await page.keyboard.down('KeyD');await page.waitForFunction(()=>outruinTest.state().x>350);await page.keyboard.up('KeyD');await page.keyboard.up('KeyW');
     assert.ok(await page.evaluate(()=>outruinTest.state().speed>0));await page.click('#sound');const ammo=await page.evaluate(()=>outruinTest.state().ammo);await page.keyboard.press('Space');await page.waitForFunction(n=>outruinTest.state().ammo<n,ammo);assert.equal(await page.locator('#sound').getAttribute('aria-pressed'),'false');
@@ -171,6 +211,13 @@ try{
     await page.evaluate(()=>dispatchEvent(new Event('blur')));assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
     await page.locator('[data-close="workshop-dialog"]').click();await page.click('#settings');assert.equal(await fits('#controls-dialog'),true);
     await page.locator('[data-close="controls-dialog"]').click();
+  });
+  await check('fitted touch layouts preserve the entire canvas in portrait, landscape and on resize',async()=>{
+    await page.evaluate(()=>{document.body.classList.add('show-touch');outruinTest.setPaused(false);});
+    for(const [width,height] of [[320,844],[390,844],[844,390]]){await page.setViewportSize({width,height});await assertWholeGame();
+      await page.screenshot({path:path.join(out,`display-touch-${width}.png`),fullPage:true});}
+    await page.setViewportSize({width:1366,height:650});await page.evaluate(()=>document.body.classList.remove('show-touch'));await assertWholeGame();
+    await page.keyboard.press('KeyP');assert.ok(await page.locator('#resume').isVisible());await page.click('#settings');await page.locator('[data-close="controls-dialog"]').click();
   });
   await check('offline reload retains full game and mod examples',async()=>{
     await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));await context.setOffline(true);await page.reload();await page.waitForFunction(()=>window.outruinTest);await page.click('#workshop');await page.selectOption('#example-pack','night-courier');await page.waitForFunction(()=>document.querySelector('#pack-source').value.includes('Glass Needle'));await page.click('#apply-pack');await page.click('#start');assert.equal(await page.evaluate(()=>outruinTest.state().pack.vehicle.name),'Glass Needle');await context.setOffline(false);

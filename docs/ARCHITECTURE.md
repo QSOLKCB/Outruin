@@ -12,6 +12,15 @@ Enemy shots use a bounded array (48 maximum), fixed tick lifetime, launch-time a
 
 The replay owns its complete content pack. Applied mods are parsed, copied and deeply frozen before a new game starts. Scavenging rewards are single-use, successful shop/route choices are ordered at simulation tick boundaries, and UI preferences do not change the gameplay RNG.
 
+`js/display.js` owns the top-bar display selector and native fullscreen lifecycle.
+The fitted layout reserves space for the toolbar, telemetry, touch controls and
+mission text, then contains the fixed 1280×720 canvas in the remaining area. It
+never changes canvas coordinates or simulation state. Mode changes clear inputs
+and pause active gameplay. Only the windowed preference is persisted; native
+fullscreen is requested from a user gesture, reflects `fullscreenchange`, and
+falls back to the fitted layout if unavailable. Menus scroll within the game
+region when a short screen cannot contain their contents.
+
 ## OPT contract: immutable presentation reuse
 
 | Contract field | Target |

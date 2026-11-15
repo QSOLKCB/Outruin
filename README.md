@@ -95,6 +95,15 @@ These are complete editable examples, not locked presets. Share the JSON and som
 
 Generic USB pads do not share a universal button order. Open **CONTROLS**, choose a profile, then click any action and press the desired button or move an axis. Mappings are saved locally. A disconnected pad or lost window focus pauses the run.
 
+Use **DISPLAY** in the top bar to choose **FIT WINDOW** (the default during play),
+**FULLSCREEN**, or **WINDOWED PAGE**. Fit window and fullscreen keep the entire
+16:9 game, resource HUD and touch controls inside the available screen without
+cropping or page scrolling. Display changes pause the run and clear held inputs.
+Esc exits native fullscreen and restores your windowed choice; browsers that
+cannot enter fullscreen fall back to Fit window. Windowed preferences are saved,
+while fullscreen always needs a fresh click. The Controls shortcut uses the same
+display mode.
+
 Android and iOS receive touch controls automatically. Desktop users can enable them in **CONTROLS**. Hold steering and throttle/fire together; releasing or cancelling a touch clears that input. Landscape gives you more road. Physical controllers and real mobile devices still need owner-side testing; browser emulation is recorded separately in [validation notes](docs/VALIDATION.md).
 
 ### First run advice
