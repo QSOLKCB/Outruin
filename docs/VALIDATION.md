@@ -1,5 +1,41 @@
 # Validation scope
 
+## Wasteland Radio — executed 15 November 2026
+
+Starting from merged source `ce9ac790fa8274c60268195918c3d32e09f68312`:
+
+- **64 Node tests passed**: five distinct eight-phrase scores, arbitrary PCM
+  chunk equivalence, all 64 effect variants, eight engine bands, seed/tick event
+  identity across frame batches, bounded voices/caches, mixer mute, preview
+  cancellation and device initialization/allocation failures. Existing driving,
+  campaign, replay, mod, input and OPT parity checks remain green.
+- **23 packaged Chromium checks passed**, using Chromium 141.0.7390.37 and
+  Playwright 1.62.1. New coverage includes real Web Audio engine/boost loops,
+  pause cleanup, mix/effect auditions, closing/editing/focus cancellation,
+  separate persisted mixer levels, narrow-screen dialogs, and downloaded road,
+  boss and effect WAVs matching the Node reference bytes.
+- PCM identities and statistics cover five complete default scores, all 64
+  effect variants and eight engine loops. All have zero clipped PCM samples.
+  This does not measure the final mix at the audio device.
+- Four complete campaign input/command journals produce equal snapshots under
+  the baseline and upgraded simulation: default Drifter and Survivor, Heavy
+  Metal and Night Courier. Gameplay remains at replay version 0.2.0.
+- Source integrity and packaging passed: 27 allowlisted files plus the generated
+  service worker. Vendored source identities are unchanged. Desktop Workshop,
+  mixer and 320 px Workshop screenshots were visually inspected.
+
+Receipts, WAV hashes, runtime/test source hashes and UI captures are retained in
+[`evidence/audio-upgrade/`](evidence/audio-upgrade/). The first browser run caught
+a preview surviving briefly after the close button: the browser's `close` event
+is asynchronous. The button and Escape cancellation now stop the preview before
+closing; the original failure is preserved. The editing check now makes a real
+JSON text change instead of filling the textarea with the same value. An initial
+baseline-comparison harness call used an invalid Node subprocess option; its
+failed log is retained separately from the successful compatibility receipt.
+
+No physical-speaker listening test, mobile audio hardware, Firefox or WebKit
+run is claimed. PCM byte identity and browser lifecycle are the executed scopes.
+
 ## Road Reborn / 0.2 — executed 15 November 2026
 
 Starting from merged source `5384a57b2061d1bd763d89b849fb5aae2cfb2454`:

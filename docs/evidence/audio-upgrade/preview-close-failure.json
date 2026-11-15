@@ -1,0 +1,62 @@
+{
+  "status": "FAIL",
+  "root": "/workspace/scratch/c1269e1fd4e9/Outruin/dist",
+  "checks": [
+    {
+      "name": "garage and original presentation",
+      "status": "PASS"
+    },
+    {
+      "name": "keyboard steering, throttle and toolbar-focused Space fire",
+      "status": "PASS"
+    },
+    {
+      "name": "pause cancels input and prevents simulation/audio progress",
+      "status": "PASS"
+    },
+    {
+      "name": "OPT background cache matches reference pixels for every biome and foot view",
+      "status": "PASS"
+    },
+    {
+      "name": "stationary steering, road projection and interpolated frames agree",
+      "status": "PASS"
+    },
+    {
+      "name": "road surface has no terrain-coloured seams between depth strips",
+      "status": "PASS"
+    },
+    {
+      "name": "upgraded road, target warnings and all three biomes render",
+      "status": "PASS"
+    },
+    {
+      "name": "a failed audio device cannot stop the render loop or overwrite preferences",
+      "status": "PASS"
+    },
+    {
+      "name": "PCM engine and boost follow driving input and all game voices stop on pause",
+      "status": "PASS"
+    },
+    {
+      "name": "outpost movement, loot and return through keyboard",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint shop, route and final victory UI",
+      "status": "PASS"
+    },
+    {
+      "name": "WAV export uses seed zero rather than the default seed",
+      "status": "PASS"
+    },
+    {
+      "name": "Workshop previews use selected mixes, survive paused frames and cancel on edit or close",
+      "status": "FAIL",
+      "error": "Expected values to be strictly equal:\n\ntrue !== false\n"
+    }
+  ],
+  "errors": [],
+  "browser": "141.0.7390.37",
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at file:///workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:106:73\n    at async check (file:///workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:10:34)\n    at async file:///workspace/scratch/c1269e1fd4e9/Outruin/tests/browser.mjs:99:3"
+}

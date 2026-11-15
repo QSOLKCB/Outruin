@@ -1,0 +1,29 @@
+✔ same seed and tick inputs replay exactly, including the owned mod (60.760159ms)
+✔ steering moves laterally; brake, drag and boost change speed (4.073819ms)
+✔ forward fire respects magazine cost, cooldown and damage (2.672965ms)
+✔ side guns target only the requested side and nearby vehicles (1.226246ms)
+✔ contact damage is bounded by invulnerability; harder mode hits harder (2.634032ms)
+✔ fuel exhaustion opens a recoverable foot stop; loot is single-use (1.960095ms)
+✔ a spent stop and empty tank ends the run without a softlock (1.24432ms)
+✔ outposts only open at low speed and interact is edge-triggered (1.023865ms)
+✔ jump, on-foot fire, pickups and return operate independently of rendering (1.654781ms)
+✔ checkpoint, shop and route choices preserve earned resources (1.719452ms)
+✔ final war rig is required and survives roadside-stop lifecycle (1.00784ms)
+✔ catch-up aborts immediately on mode change and retains shot events (1.955667ms)
+✔ render-frame chunking does not change tick outcomes (5.389963ms)
+✔ modded car, gun, enemy, level and difficulty take effect (1.768264ms)
+✔ all 101 accepted one-scrap purchases survive a recorded depot replay (30.081285ms)
+✔ invalid replay records fail closed (3.791028ms)
+✔ replay captures the time limit on its final recorded tick (1.210376ms)
+✔ a complete original campaign can be won and replayed from real input decisions (69.892105ms)
+✔ both example vehicle packs complete a full Drifter campaign (56.942449ms)
+✔ default campaign survives an input-driven Survivor run (11.865929ms)
+ℹ Error: A resource generated asynchronous activity after the test ended. This activity created the error "TypeError [ERR_INVALID_ARG_TYPE]: The "options" argument must be of type object. Received type string ('utf8')" which triggered an uncaughtException event, caught by the test runner.
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 279.457788

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Browser dependency is test-only. No runtime install or bundle is required.
 import {createRequire} from 'node:module';import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
+import {composeRadio} from '../js/radio.js';import {compileEffect,effectVariant} from '../js/sfx.js';import {DEFAULT_PACK} from '../js/mod.js';
 const require=createRequire(import.meta.url);let playwright;
 try{playwright=require('playwright');}catch{playwright=require(path.join(process.env.PLAYWRIGHT_MODULES||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES||'', 'playwright'));}
 const root=path.resolve(process.env.TEST_ROOT||'.'),out=path.resolve('evidence');fs.mkdirSync(out,{recursive:true});
@@ -63,6 +64,17 @@ try{
     await page.click('#sound');await page.click('#sound');await page.waitForFunction(()=>outruinTest.sound.music?.snapshot().active);
     await page.keyboard.press('KeyP');assert.equal(await page.evaluate(()=>outruinTest.sound.music),null);await page.click('#resume');
   });
+  await check('PCM engine and boost follow driving input and all game voices stop on pause',async()=>{
+    await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.tick=360;s.speed=700;outruinTest.load(s);});
+    await page.keyboard.down('KeyW');await page.keyboard.down('ShiftLeft');
+    await page.waitForFunction(()=>outruinTest.sound.loops.has('boost')&&outruinTest.sound.music?.snapshot().tick>=360);
+    const playing=await page.evaluate(()=>{const a=outruinTest.sound;return {loops:a.loops.size,loop:a.loops.get('motor').source.loop,rate:a.loops.get('motor').source.buffer.sampleRate};});
+    assert.equal(playing.loops,2);assert.equal(playing.loop,true);assert.equal(playing.rate,48000);
+    await page.keyboard.up('ShiftLeft');await page.keyboard.up('KeyW');await page.keyboard.press('KeyP');
+    assert.equal(await page.evaluate(()=>{const a=outruinTest.sound.snapshot();return a.loops+a.retiring+a.effectVoices+(a.music?1:0);}),0);
+    const pausedTick=await page.evaluate(()=>outruinTest.state().tick);await page.click('#resume');
+    await page.waitForFunction(t=>outruinTest.sound.music?.snapshot().tick>=t,pausedTick);
+  });
   await check('outpost movement, loot and return through keyboard',async()=>{
     await page.evaluate(async()=>{const {createGame,enterOutpost}=await import('./js/sim.js');const s=createGame();s.fuel=1000;enterOutpost(s);s.foot.enemies=[];outruinTest.load(s);});
     await page.keyboard.down('KeyD');await page.waitForFunction(()=>outruinTest.state().foot.x>260);await page.keyboard.up('KeyD');await page.keyboard.press('KeyE');await page.waitForFunction(()=>outruinTest.state().fuel>1000);
@@ -76,14 +88,43 @@ try{
   await check('WAV export uses seed zero rather than the default seed',async()=>{
     await page.click('#result-garage');await page.locator('#seed').fill('0');await page.click('#workshop');
     const downloading=page.waitForEvent('download');await page.click('#export-wav');const wav=await downloading;
-    assert.equal(wav.suggestedFilename(),'outruin-last-signal-radio.wav');
-    const expected=await page.evaluate(async()=>{
-      const {compileSoundtrack}=await import('./js/sound.js'),{DEFAULT_PACK}=await import('./js/mod.js');
-      const digest=await crypto.subtle.digest('SHA-256',compileSoundtrack(DEFAULT_PACK,0).wav());
-      return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
-    });
+    assert.equal(wav.suggestedFilename(),'outruin-last-signal-rust-radio.wav');
+    const expected=createHash('sha256').update(composeRadio(DEFAULT_PACK,0).wav()).digest('hex');
     assert.equal(createHash('sha256').update(fs.readFileSync(await wav.path())).digest('hex'),expected);
     await page.locator('[data-close="workshop-dialog"]').click();
+  });
+  await check('Workshop previews use selected mixes, survive paused frames and cancel on edit or close',async()=>{
+    await page.click('#workshop');await page.selectOption('#radio-mix','war-rig');await page.click('#preview-radio');
+    await page.waitForFunction(()=>outruinTest.sound.snapshot().preview);
+    await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),true);
+    await page.locator('#radio-mix').selectOption('salt');assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
+    await page.click('#preview-radio');await page.waitForFunction(()=>outruinTest.sound.snapshot().preview);
+    await page.screenshot({path:path.join(out,'radio-workshop.png'),fullPage:true});
+    await page.locator('[data-close="workshop-dialog"]').click();assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
+    await page.click('#workshop');await page.click('#preview-radio');await page.waitForFunction(()=>outruinTest.sound.snapshot().preview);
+    await page.locator('#pack-source').fill((await page.locator('#pack-source').inputValue())+'\n');assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
+    await page.locator('[data-close="workshop-dialog"]').click();
+  });
+  await check('selected boss and effect WAVs match the Node reference bytes',async()=>{
+    await page.click('#workshop');await page.selectOption('#radio-mix','war-rig');await page.selectOption('#effect-mix','explode');
+    for(const [button,filename,effect] of [['#export-wav','outruin-last-signal-war-rig-radio.wav',false],['#export-effect','outruin-explode.wav',true]]){
+      const downloading=page.waitForEvent('download');await page.click(button);const wav=await downloading;assert.equal(wav.suggestedFilename(),filename);
+      const score=effect?compileEffect('explode',effectVariant(0,0,'explode')):composeRadio(DEFAULT_PACK,0,'boss');
+      const expected=createHash('sha256').update(score.wav()).digest('hex');
+      assert.equal(createHash('sha256').update(fs.readFileSync(await wav.path())).digest('hex'),expected);
+    }
+    await page.click('#preview-effect');await page.waitForFunction(()=>outruinTest.sound.snapshot().preview);
+    await page.click('#stop-preview');assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
+    await page.locator('[data-close="workshop-dialog"]').click();
+  });
+  await check('music, effects and engine sliders persist independently across reload',async()=>{
+    await page.click('#settings');
+    await page.evaluate(()=>{for(const [name,value] of [['music',0],['effects',73],['engine',21]]){const e=document.querySelector('#mix-'+name);e.value=value;e.dispatchEvent(new Event('input',{bubbles:true}));}});
+    assert.equal(await page.locator('#mix-effects-value').innerText(),'73%');await page.screenshot({path:path.join(out,'audio-mixer.png'),fullPage:true});
+    await page.reload();await page.waitForFunction(()=>window.outruinTest);assert.deepEqual(await page.evaluate(()=>outruinTest.sound.snapshot().mix),{music:0,effects:73,engine:21});
+    await page.click('#start');await page.waitForFunction(()=>outruinTest.sound.loops.size>0);assert.equal(await page.evaluate(()=>outruinTest.sound.music),null);
+    await page.click('#settings');await page.evaluate(()=>{for(const [name,value] of [['music',65],['effects',85],['engine',40]]){const e=document.querySelector('#mix-'+name);e.value=value;e.dispatchEvent(new Event('input',{bubbles:true}));}});
+    await page.locator('[data-close="controls-dialog"]').click();await page.click('#resume');await page.waitForFunction(()=>outruinTest.sound.music?.snapshot().active);
   });
   await check('shop cache invalidates when modded prices change without changing resources',async()=>{
     await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.mode='depot';s.scrap=15;outruinTest.load(s);});
@@ -121,6 +162,15 @@ try{
     await page.waitForFunction(()=>outruinTest.state().speed>100&&outruinTest.state().x>200);
     await page.evaluate(()=>{for(const [id,key] of [[1,'throttle'],[2,'right']])document.querySelector(`[data-control="${key}"]`).dispatchEvent(new PointerEvent('pointercancel',{pointerId:id,bubbles:true}));});
     assert.equal(await page.evaluate(()=>outruinTest.controls.touch.size),0);
+  });
+  await check('radio and mixer dialogs fit narrow screens and preview stops on focus loss',async()=>{
+    await page.setViewportSize({width:320,height:844});await page.click('#workshop');
+    const fits=selector=>page.locator(selector).evaluate(e=>e.scrollWidth<=e.clientWidth&&e.getBoundingClientRect().right<=innerWidth);
+    assert.equal(await fits('#workshop-dialog'),true);await page.locator('#radio-mix').scrollIntoViewIfNeeded();
+    await page.screenshot({path:path.join(out,'radio-mobile.png'),fullPage:true});await page.click('#preview-radio');await page.waitForFunction(()=>outruinTest.sound.snapshot().preview);
+    await page.evaluate(()=>dispatchEvent(new Event('blur')));assert.equal(await page.evaluate(()=>outruinTest.sound.snapshot().preview),false);
+    await page.locator('[data-close="workshop-dialog"]').click();await page.click('#settings');assert.equal(await fits('#controls-dialog'),true);
+    await page.locator('[data-close="controls-dialog"]').click();
   });
   await check('offline reload retains full game and mod examples',async()=>{
     await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));await context.setOffline(true);await page.reload();await page.waitForFunction(()=>window.outruinTest);await page.click('#workshop');await page.selectOption('#example-pack','night-courier');await page.waitForFunction(()=>document.querySelector('#pack-source').value.includes('Glass Needle'));await page.click('#apply-pack');await page.click('#start');assert.equal(await page.evaluate(()=>outruinTest.state().pack.vehicle.name),'Glass Needle');await context.setOffline(false);
