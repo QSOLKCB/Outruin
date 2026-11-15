@@ -1,2 +1,4 @@
 # Outruin
-Outruin - A Web Based Remake Of Outlander with no Original Assets - The Game play IS The Prize
+Outruin - A Web Based Remake Of Overlander / Outlander with no Original Assets - The Game play IS The Prize
+https://www.atarilegend.com/games/overlander - AtariST
+https://en.wikipedia.org/wiki/Outlander_(video_game) - Genesis / MegaDrive
