@@ -20,12 +20,21 @@ test('final war rig is required and survives roadside-stop lifecycle',()=>{const
 test('catch-up aborts immediately on mode change and retains shot events',()=>{const s=createGame(),clock=new FixedClock({step:1/60,maxSteps:10});s.distance=s.pack.sectors[0].length;const events=advanceFrame(clock,s,I.fire,.1);assert.equal(s.tick,1);assert.equal(s.mode,'foot');assert.equal(events.filter(e=>e.type==='shot').length,1);assert.ok(clock.paused);});
 test('render-frame chunking does not change tick outcomes',()=>{const a=createGame(),b=createGame();const ca=new FixedClock({step:1/60}),cb=new FixedClock({step:1/60});for(let i=0;i<120;i++)advanceFrame(ca,a,I.throttle,1/60);for(let i=0;i<60;i++)advanceFrame(cb,b,I.throttle,1/30);assert.deepEqual(snapshot(a),snapshot(b));});
 test('modded car, gun, enemy, level and difficulty take effect',()=>{const draft=JSON.parse(serializePack(DEFAULT_PACK));draft.vehicle.topSpeed=600;draft.weapons.forward.damage=5;draft.enemies.truck.hp=4;draft.sectors[0].length=700000;draft.difficulties.survivor.ammo=77;const s=createGame({pack:parsePack(serializePack(draft))});ticks(s,140,I.throttle);assert.equal(s.speed,600);assert.equal(s.ammo,77);s.entities=[enemy(s,{kind:'truck',hp:4,z:s.distance+100000})];step(s,I.fire);assert.equal(s.kills,1);s.distance=700000;step(s);assert.equal(s.mode,'foot');});
+test('all 101 accepted one-scrap purchases survive a recorded depot replay',()=>{
+  const draft=JSON.parse(serializePack(DEFAULT_PACK));draft.shop.ammo.cost=1;draft.foot.scrap=500;draft.sectors[0].length=600000;
+  const s=driveCampaign(1988,'drifter',parsePack(serializePack(draft)),{stopAtFirstDepot:true});
+  assert.equal(s.mode,'depot',s.reason);assert.ok(s.scrap>=101,'recorded campaign must earn the purchase budget');
+  for(let i=0;i<101;i++)assert.equal(command(s,'buy','ammo'),true);
+  const record=runRecord(s);assert.equal(record.commands.length,101);
+  assert.deepEqual(snapshot(replay(record)),snapshot(s));
+});
 test('invalid replay records fail closed',()=>{assert.throws(()=>replay({}));const r=runRecord(createGame());r.inputs=[NaN];assert.throws(()=>replay(r));r.inputs=[];r.commands=[{tick:99,type:'route',value:'highway'}];assert.throws(()=>replay(r));});
 test('replay captures the time limit on its final recorded tick',()=>{const s=createGame();s.tick=71999;step(s);assert.equal(s.mode,'lost');assert.equal(s.tick,72000);});
-export function driveCampaign(seed=1988,difficulty='drifter',pack=DEFAULT_PACK){
+export function driveCampaign(seed=1988,difficulty='drifter',pack=DEFAULT_PACK,{stopAtFirstDepot=false}={}){
   const s=createGame({seed,difficulty,pack});
   for(let i=0;i<35000&&!['won','lost'].includes(s.mode);i++){
     if(s.mode==='depot'){
+      if(stopAtFirstDepot)break;
       if(!s.gun)command(s,'buy','gun');if(s.hull<s.pack.vehicle.armour-30)command(s,'buy','repair');
       if(s.fuel<65000)command(s,'buy','fuel');if(s.ammo<100)command(s,'buy','ammo');command(s,'route','highway');continue;
     }

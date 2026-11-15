@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Browser dependency is test-only. No runtime install or bundle is required.
-import {createRequire} from 'node:module';import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
 const require=createRequire(import.meta.url);let playwright;
 try{playwright=require('playwright');}catch{playwright=require(path.join(process.env.PLAYWRIGHT_MODULES||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES||'', 'playwright'));}
 const root=path.resolve(process.env.TEST_ROOT||'.'),out=path.resolve('evidence');fs.mkdirSync(out,{recursive:true});
@@ -43,6 +43,32 @@ try{
     await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.mode='depot';s.scrap=300;outruinTest.load(s);});
     await page.locator('[data-buy="engine"]').click();assert.equal(await page.evaluate(()=>outruinTest.state().engine),12);await page.click('#canyon');await page.waitForFunction(()=>outruinTest.state().sector===1);
     await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.sector=2;s.distance=s.pack.sectors[2].length;s.bossDefeated=true;s.bossSpawned=true;outruinTest.load(s);});await page.waitForFunction(()=>outruinTest.state().mode==='won');assert.ok(await page.locator('#result-title').isVisible());
+  });
+  await check('WAV export uses seed zero rather than the default seed',async()=>{
+    await page.click('#result-garage');await page.locator('#seed').fill('0');await page.click('#workshop');
+    const downloading=page.waitForEvent('download');await page.click('#export-wav');const wav=await downloading;
+    assert.equal(wav.suggestedFilename(),'outruin-last-signal-radio.wav');
+    const expected=await page.evaluate(async()=>{
+      const {compileScore}=await import('./js/sound.js'),{DEFAULT_PACK}=await import('./js/mod.js');
+      const digest=await crypto.subtle.digest('SHA-256',compileScore(DEFAULT_PACK,0).wav());
+      return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
+    });
+    assert.equal(createHash('sha256').update(fs.readFileSync(await wav.path())).digest('hex'),expected);
+    await page.locator('[data-close="workshop-dialog"]').click();
+  });
+  await check('shop cache invalidates when modded prices change without changing resources',async()=>{
+    await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.mode='depot';s.scrap=15;outruinTest.load(s);});
+    assert.match(await page.locator('[data-buy="ammo"] small').innerText(),/30 SCRAP/);
+    assert.equal(await page.locator('[data-buy="ammo"]').isDisabled(),true);
+    await page.evaluate(async()=>{
+      const {createGame}=await import('./js/sim.js'),{DEFAULT_PACK,parsePack,serializePack}=await import('./js/mod.js');
+      const draft=JSON.parse(serializePack(DEFAULT_PACK));draft.shop.ammo.cost=1;
+      const s=createGame({pack:parsePack(serializePack(draft))});s.mode='depot';s.scrap=15;outruinTest.load(s);
+    });
+    assert.match(await page.locator('[data-buy="ammo"] small').innerText(),/1 SCRAP/);
+    assert.equal(await page.locator('[data-buy="ammo"]').isEnabled(),true);
+    await page.locator('[data-buy="ammo"]').click();
+    assert.equal(await page.evaluate(()=>outruinTest.state().scrap),14);
   });
   await check('mod validation, bundled custom car and export are usable',async()=>{
     await page.click('#workshop');await page.locator('#pack-source').fill('{"kind":"unsafe"}');await page.click('#apply-pack');assert.ok((await page.locator('#mod-status').innerText()).includes('rejected'));

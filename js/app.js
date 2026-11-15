@@ -12,6 +12,7 @@ const save=(key,value)=>{try{localStorage.setItem('outruin.'+key,value);}catch{/
 let pack=DEFAULT_PACK,importToken=0;
 try{const stored=read('pack');if(stored)pack=parsePack(stored);}catch{ $('menu-error').textContent='Saved mod could not be loaded. Original campaign restored.'; }
 let state=createGame({pack}),started=false,paused=false,last=0,uiAt=0,lastMode='road',resultRecorded=false;
+let renderedShopPack=null;
 const renderer=new Renderer($('game')),sound=new Sound(),clock=new FixedClock({step:1/60,maxFrame:.1,maxSteps:6});
 const dialogs=()=>document.querySelector('dialog[open]')!==null;
 const controls=new Controls({playing:()=>started&&['road','foot'].includes(state.mode)&&!dialogs(),
@@ -52,7 +53,7 @@ function updateUI(){
     state.mode==='depot'?'Repair, refuel, and choose your route to the next region.':state.mode==='won'||state.mode==='lost'?state.reason:
     state.tick<state.noticeUntil?state.notice:`${state.pack.sectors[state.sector].name} / Hold W or ↑ to drive. Space fires forward. Q / C fire to the sides.`;
   if($('objective').textContent!==objective)$('objective').textContent=objective;
-  if(state.mode==='depot'){const signature=[state.sector,state.scrap,state.engine,state.gun,state.hull,state.fuel,state.ammo].join(':');if($('shop').dataset.signature!==signature){$('shop').dataset.signature=signature;renderShop();}}
+  if(state.mode==='depot'){const signature=[state.sector,state.scrap,state.engine,state.gun,state.hull,state.fuel,state.ammo].join(':');if(renderedShopPack!==state.pack||$('shop').dataset.signature!==signature){renderedShopPack=state.pack;$('shop').dataset.signature=signature;renderShop();}}
   if(['won','lost'].includes(state.mode)&&!resultRecorded){
     resultRecorded=true;sound.stop();const won=state.mode==='won';$('result-tag').textContent=won?'TRANSMISSION RECEIVED':'SIGNAL LOST';
     $('result-title').textContent=won?'You made it through.':'The road remembers.';$('result-reason').textContent=state.reason;
@@ -98,7 +99,7 @@ $('import-pack').onclick=()=>$('pack-file').click();
 $('pack-file').onchange=async()=>{const file=$('pack-file').files[0];if(!file)return;const token=++importToken;try{if(file.size>65536)throw new Error('File exceeds 64 KiB');const next=parsePack(await file.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Imported '+next.name+'. Apply to start a new campaign.';}catch(e){$('mod-status').textContent='Import rejected: '+e.message;}finally{$('pack-file').value='';}};
 $('pack-source').addEventListener('input',()=>importToken++);
 $('example-pack').onchange=async()=>{const id=$('example-pack').value;if(!['the-last-signal','heavy-metal','night-courier'].includes(id))return;const token=++importToken;try{const response=await fetch('mods/'+id+'.json');if(!response.ok)throw new Error('Example could not be loaded');const next=parsePack(await response.text());if(token!==importToken||!$('workshop-dialog').open)return;fillWorkshop(next);$('mod-status').textContent='Example loaded. Edit or Apply to drive it.';}catch(e){if(token===importToken)$('mod-status').textContent=e.message;}};
-$('export-wav').onclick=()=>{try{const draft=parsePack($('pack-source').value);const score=compileScore(draft,Number($('seed').value)||1988);download('outruin-'+draft.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('mod-status').textContent='Original 48 kHz PCM soundtrack exported.';}catch(e){$('mod-status').textContent=e.message;}};
+$('export-wav').onclick=()=>{try{const draft=parsePack($('pack-source').value);const seedInput=$('seed');if(seedInput.value===''||!seedInput.checkValidity())throw new RangeError('Choose a whole-number seed from 0 to 4294967295.');const score=compileScore(draft,Number(seedInput.value));download('outruin-'+draft.id+'-radio.wav',new Blob([score.wav()],{type:'audio/wav'}));$('mod-status').textContent='Original 48 kHz PCM soundtrack exported.';}catch(e){$('mod-status').textContent=e.message;}};
 addEventListener('blur',()=>{if(started&&['road','foot'].includes(state.mode))togglePause(true);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)togglePause(true);});
 addEventListener('pagehide',()=>{sound.stop();controls.clear();clock.setPaused(true);});

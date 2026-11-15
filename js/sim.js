@@ -183,8 +183,10 @@ export function snapshot(s) {
 }
 export function runRecord(s){return {kind:'outruin.replay.v1',version:VERSION,seed:s.seed,difficulty:s.difficulty,pack:s.pack,inputs:[...s.journal],commands:s.commands.map(c=>({...c}))};}
 export function replay(record) {
+  // Depot purchases may exceed 100 accepted commands at a single tick. Validate each
+  // command against the simulated economy rather than rejecting exported runs.
   if(!record||record.kind!=='outruin.replay.v1'||record.version!==VERSION||!Array.isArray(record.inputs)||record.inputs.length>72000||
-    !Array.isArray(record.commands)||record.commands.length>100)throw new TypeError('Unsupported replay');
+    !Array.isArray(record.commands))throw new TypeError('Unsupported replay');
   const s=createGame(record);let c=0;
   for(const m of record.inputs){
     while(c<record.commands.length&&record.commands[c].tick===s.tick){const cmd=record.commands[c++];if(!command(s,cmd.type,cmd.value,{record:false}))throw new Error('Invalid replay command');}
