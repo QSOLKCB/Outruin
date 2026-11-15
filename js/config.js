@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 export const TICK_RATE = 60;
 export const INPUT = Object.freeze({left:1,right:2,throttle:4,brake:8,fire:16,boost:32,interact:64,leftShot:128,rightShot:256,jump:512});
 export const DIFFICULTIES = Object.freeze({

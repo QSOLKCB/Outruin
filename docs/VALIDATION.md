@@ -1,6 +1,32 @@
 # Validation scope
 
-## Executed locally — 15 November 2026
+## Road Reborn / 0.2 — executed 15 November 2026
+
+Starting from merged source `5384a57b2061d1bd763d89b849fb5aae2cfb2454`:
+
+- **49 Node tests passed**, including complete default and example-pack Drifter
+  campaigns, Survivor completion and exact current-version replay snapshots.
+- **18 packaged Chromium checks passed** with Chromium 141.0.7390.37 and the
+  installed Playwright 1.62.1. Coverage includes stationary steering, real keyboard
+  driving, interpolation without state mutation, road scanline integrity, all
+  three biome captures, audio-failure recovery, complete seed-zero WAV export,
+  remapping, mobile layout/touch, pause/focus and offline reload.
+- Source checks and the allowlisted build passed: 25 runtime files plus the
+  generated service worker, including byte-identical VANILLAJS soundtrack/player
+  modules at `987c8d9be0af418307ea7cda05cbf56b5f130c71`.
+- Road screenshots were visually inspected. Camera/shoulder alignment, brighter
+  target warnings, travel traces and removal of horizontal road seams are shown
+  in [`evidence/road-upgrade/`](evidence/road-upgrade/).
+
+The receipts and runtime/test SHA-256 manifest bind these local observations.
+The earlier failures are retained: missing default Chromium executable, a legacy
+steering-distance assertion based on immediate low-speed movement, a road-surface
+fixture that accidentally sampled the starting instruction text, and a remapping
+fixture whose fixed 40 ms wait could miss the neutral poll. The revised tests
+exercise the new steering timing, sample unobstructed road, and await actual pad
+readiness. No physical-device or other-browser coverage is implied.
+
+## Initial milestone — executed locally 15 November 2026
 
 - Node v24.22.1: simulation, complete campaign input traces, replay, mod rejection, controller mapping, PCM chunk equivalence and cache parity tests.
 - Headless Chromium 141.0.7390.37, driven by the environment's Playwright 1.62.1: garage/start, steering/throttle, Space after clicking SOUND, pause, cached/reference pixel identity for all three biomes and foot views, keyboard scavenging/return, shop/route/victory UI, invalid-pack rejection, custom vehicle application/export, simulated SNES remapping, disconnect/focus lifecycle, 320/390/768 px layouts, simultaneous pointer controls and offline reload with bundled mods.

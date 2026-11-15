@@ -6,6 +6,10 @@ export function advanceFrame(clock,state,mask,elapsed){
   const events=[];
   if(!['road','foot'].includes(state.mode))return events;
   const mode=state.mode;
-  clock.advance(elapsed,()=>{step(state,mask);events.push(...state.events);if(state.mode!==mode)clock.setPaused(true);});
+  const frame=clock.advance(elapsed,()=>{
+    clock.presentation={state,previous:{mode:state.mode,sector:state.sector,x:state.x,distance:state.distance,vx:state.vx,steering:state.steering}};
+    step(state,mask);events.push(...state.events);if(state.mode!==mode)clock.setPaused(true);
+  });
+  clock.renderAlpha=frame.alpha;
   return events;
 }

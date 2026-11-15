@@ -16,6 +16,8 @@
 
 **Drive. Fight. Scavenge. Rebuild. Make your own wasteland.**
 
+**0.2 — Road Reborn:** speed-sensitive steering, continuous bends, matching road/shoulder coordinates, a rebuilt chase view, visible enemy rounds you can dodge, and a longer VANILLAJS soundtrack. [What changed and how it was checked](docs/ROAD_REBORN.md).
+
 [Play in your browser](https://qsolkcb.github.io/Outruin/) · [Modding guide](docs/MODDING.md) · [Controls](#know-your-machine) · [Engineering](docs/ARCHITECTURE.md) · [Roadmap](ROADMAP.md)
 
 </div>
@@ -37,14 +39,14 @@ This is the first playable campaign, not a claim of feature parity with either i
 | System | Playable now |
 | :--- | :--- |
 | **The Last Signal** | Three regions, 8.4 km of authored campaign distance, relay stops and a final war rig encounter |
-| **Driving** | Acceleration, braking, lateral steering, bend forces, loose shoulders and rechargeable boost |
-| **Vehicle combat** | Forward repeater, left/right breach guns, bikes, buggies, haulers and a boss |
+| **Driving** | Speed-sensitive steering, wheel return, continuous corners, braking grip, loose shoulders and rechargeable boost |
+| **Vehicle combat** | Target brackets, forward and side tracers, telegraphed travelling enemy fire, weaving bikes/buggies, haulers and a boss |
 | **Scavenging** | Leave the car, walk and jump through an outpost, fight raiders and recover supplies |
 | **Survival** | Fuel, armour, health, ammunition and single-use supply crates |
 | **Progression** | Spend scrap on repairs, fuel, ammunition, an engine tune or a stronger forward gun |
 | **Route choice** | Open highway or sharper canyon bends with more patrols and hazard pay |
 | **Difficulty** | Drifter, Survivor and Wastelord alter damage, patrol frequency and supply pressure |
-| **Sound** | Original four-lane industrial/chiptune score, with road, outpost and boss arrangements |
+| **Sound** | Four-phrase industrial/chiptune loops, each with four lanes; road, outpost and boss arrangements |
 | **Workshop** | Edit, validate, import and export complete JSON content packs; export soundtrack WAVs |
 | **Input** | Keyboard, remappable Xbox/standard and generic SNES profiles, simultaneous touch controls |
 | **Offline** | A versioned local cache after the first successful load; no runtime CDNs or services |
@@ -96,15 +98,16 @@ Android and iOS receive touch controls automatically. Desktop users can enable t
 ### First run advice
 
 1. Start with **Drifter**. Hold **W** to accelerate — the car does not drive itself.
-2. Steer into bends and keep off the shoulder. Hold **Space** only when a target is lined up; ammunition is finite.
-3. Use **Q / C** when a rider is alongside. Boost is useful, but release it after the tank empties so it can recharge for another burst.
-4. Brake below the displayed stopping threshold, then press **E / F** for a roadside stop. You can scavenge once per region. An unvisited outpost also opens automatically at a relay or when fuel runs out.
-5. On foot, walk close to crates and press **E / F**. Collect fuel and ammo, then return to the car and press **E** again.
-6. At a relay, spend scrap and pick the next route. Destroy the final war rig before crossing the last finish line.
+2. Ease into bends and brake to regain grip. The wheels can turn at a standstill, but the car needs forward speed to steer. Keep off the shoulder.
+3. Green brackets mark a target in forward-gun range. Orange warnings announce incoming rounds: move out of their path. Hold **Space** only when lined up; ammunition is finite.
+4. Use **Q / C** when a rider is alongside. Boost is useful, but release it after the tank empties so it can recharge for another burst.
+5. Brake below the displayed stopping threshold, then press **E / F** for a roadside stop. You can scavenge once per region. An unvisited outpost also opens automatically at a relay or when fuel runs out.
+6. On foot, walk close to crates and press **E / F**. Collect fuel and ammo, then return to the car and press **E** again.
+7. At a relay, spend scrap and pick the next route. Destroy the final war rig before crossing the last finish line.
 
 ## A radio that can be reproduced
 
-The soundtrack is composed as a bounded, four-lane event score and rendered through VANILLAJS `audio2d` into **48 kHz mono PCM16**. The same pack, seed and arrangement generate the same reference samples. Road, scavenging and boss arrangements use distinct musical patterns. Export the road arrangement as a WAV directly from the Workshop.
+The soundtrack is composed as four varied phrases, each with four lanes, through VANILLAJS `soundtrack` and `audio2d` into **48 kHz mono PCM16**. The default road loop lasts 16 seconds. The same pack, seed and arrangement generate the same reference samples. Road, scavenging and boss arrangements use distinct musical patterns. Export the complete road loop as a WAV from the Workshop. Playback resumes from the simulation tick after a pause; an audio-device failure leaves gameplay and your saved sound preference intact.
 
 Playback timing, browser resampling and the audio device are separate from reference-PCM determinism. The sound-effects presentation uses Web Audio oscillators. We do not claim that speakers or every browser produce bit-identical output.
 
@@ -112,7 +115,7 @@ Playback timing, browser resampling and the audio device are separate from refer
 
 | Source | Actual role |
 | :--- | :--- |
-| **[VANILLAJS](https://github.com/QSOLKCB/VANILLAJS)** | Unmodified fixed clock, seeded RNG/math utilities and integer procedural PCM renderer |
+| **[VANILLAJS](https://github.com/QSOLKCB/VANILLAJS)** | Unmodified fixed clock, seeded RNG/math utilities, PCM renderer, multi-phrase soundtrack module and tick-synchronised Web Audio player |
 | **[STREET-RACER](https://github.com/QSOLKCB/STREET-RACER)** | Reference for pseudo-3D road presentation and adapting fixed-step events to render frames |
 | **[OPT](https://github.com/QSOLKCB/OPT)** | Bounded reuse of immutable sky layers and score compilations, with reference parity checks |
 

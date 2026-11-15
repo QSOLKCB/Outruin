@@ -38,8 +38,9 @@ The simulation ticks at 60 Hz. Road distance uses integer millimetres and speed 
 
 - `km/h = topSpeed × 0.216` — the default 1080 is about 233 km/h.
 - `acceleration: 5` adds 5 mm/tick to speed each simulation tick while accelerating.
-- `steering` is the target lateral speed in normalized road units per tick. Road edges are at −1000 and +1000.
-- `grip` is how quickly lateral velocity approaches the steering target.
+- `steering` scales lateral response with forward speed: target = wheel × steering × 0.68 × min(speed / 850, 1.2). Road edges are at −1000 and +1000. No forward speed means no lateral movement.
+- `grip` controls wheel response and how quickly lateral velocity approaches its target. Braking improves response; the shoulder reduces it. Existing v1 packs remain valid, but the 0.2 driving rules deliberately change their feel.
+- `bends` are smoothly interpolated between authored values over each 280 m segment, avoiding abrupt sideways forces at boundaries.
 - `fuelCapacity: 100000` is 100 displayed fuel units. HUD percentages adapt to capacity.
 - `interval: 8` permits a forward shot every eight simulation ticks while held, if ammunition remains.
 
@@ -55,7 +56,7 @@ Routes are difficulty variants of the next sector: highway uses the normal bend 
 
 `music.scale` contains eight integer frequencies; `music.melody` chooses indices into that scale. `music.bass` contains four low frequencies. Supported melody waveforms are `saw`, `square`, and `triangle`.
 
-The composer adds bass, percussion and kick lanes at absolute sample boundaries. Outpost and boss modes change arrangement and tempo within a bounded range. **EXPORT SOUNDTRACK WAV** renders the editor's road arrangement with the garage seed. The same pack and seed give the same reference PCM. Change the source composer for new instruments, channel counts or song forms.
+The composer adds bass, percussion and kick lanes at absolute sample boundaries. Four phrases rotate the authored melody and bass, with reproducible percussion seeds. Outpost and boss modes change arrangement and tempo within a bounded range. **EXPORT SOUNDTRACK WAV** renders all four phrases of the editor's road arrangement with the garage seed, including seed zero. Each phrase ends on a simulation tick. The same pack and seed give the same reference PCM. Change the source composer for new instruments, channel counts or song forms.
 
 ## New mechanics and custom art
 
@@ -76,5 +77,7 @@ No executable mod plugins are run by the importer. Build a source fork for execu
 ## Replays and versioning
 
 A downloaded `outruin.replay.v1` record contains the game version, seed, difficulty, complete resolved pack, per-tick inputs and successful shop/route commands. `replay(record)` in `js/sim.js` reconstructs a run for tests and tools. The first milestone exports records; it does not yet provide an in-game replay viewer.
+
+Road Reborn uses game version **0.2.0**. Its new handling and travelling enemy shots change gameplay semantics, so 0.1.0 recordings must be replayed with the old source revision. They are rejected by this version rather than silently producing different results. The JSON content-pack schema remains `outruin.mod.v1`.
 
 Reference repeatability is tested within the JavaScript runtime. Rendering, browser audio scheduling and physical devices are separate evidence scopes. Future changes that alter gameplay semantics must version the replay contract or retain the old implementation.

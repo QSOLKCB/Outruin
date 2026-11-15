@@ -17,7 +17,7 @@ try{
   const options={headless:true,args:['--no-sandbox']};if(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE)options.executablePath=process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
   browser=await playwright.chromium.launch(options);receipt.browser=browser.version();
   const context=await browser.newContext({viewport:{width:1440,height:1050},reducedMotion:'reduce'});
-  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>errors.push(e.message));
   await page.goto(url+'/?test=1');await page.waitForFunction(()=>window.outruinTest);
   await check('garage and original presentation',async()=>{assert.ok(await page.locator('#start').isVisible());await page.screenshot({path:path.join(out,'menu.png'),fullPage:true});});
   await check('keyboard steering, throttle and toolbar-focused Space fire',async()=>{
@@ -34,6 +34,35 @@ try{
         r.reference=true;r.draw(s);const a=r.ctx.getImageData(0,0,1280,720).data;r.reference=false;r.draw(s);const b=r.ctx.getImageData(0,0,1280,720).data;
         results.push(a.every((v,i)=>v===b[i]));}return results;});assert.ok(parity.every(Boolean));
   });
+  await check('stationary steering, road projection and interpolated frames agree',async()=>{
+    await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');outruinTest.load(createGame());});
+    await page.keyboard.down('KeyD');await page.waitForTimeout(180);await page.keyboard.up('KeyD');
+    assert.equal(await page.evaluate(()=>outruinTest.state().x),0);
+    await page.keyboard.down('KeyW');await page.keyboard.down('KeyD');await page.waitForFunction(()=>outruinTest.state().x>220);await page.keyboard.up('KeyD');await page.keyboard.up('KeyW');
+    const stable=await page.evaluate(()=>{const s=outruinTest.state(),before=JSON.stringify(outruinTest.snapshot());outruinTest.renderer.draw(s,.5,outruinTest.clock.presentation.previous);return before===JSON.stringify(outruinTest.snapshot());});assert.equal(stable,true);
+  });
+  await check('road surface has no terrain-coloured seams between depth strips',async()=>{
+    const clean=await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const s=createGame();s.tick=500;s.noticeUntil=0;outruinTest.renderer.draw(s);const c=outruinTest.renderer.ctx;for(let y=350;y<500;y++)if(c.getImageData(640,y,1,1).data[0]>70)return false;return true;});assert.equal(clean,true);
+  });
+  await check('upgraded road, target warnings and all three biomes render',async()=>{
+    const captures=await page.evaluate(async()=>{const {createGame}=await import('./js/sim.js');const captures=[];
+      for(let sector=0;sector<3;sector++){const s=createGame();s.sector=sector;s.distance=550000;s.tick=480;s.noticeUntil=0;s.speed=960;s.x=130;
+        s.entities=[{id:1,kind:'buggy',x:120,z:690000,speed:450,hp:3,shot:35,phase:0},{id:2,kind:'bike',x:-530,z:590000,speed:620,hp:2,shot:100,phase:0},{id:3,kind:'truck',x:650,z:820000,speed:340,hp:5,shot:90,phase:0}];
+        s.projectiles=[{id:9,x:-100,z:620000,vx:0,damage:5,ttl:60}];s.tracers=[{fromX:130,fromZ:550000,x:120,z:690000,ttl:4,hit:true,side:0}];
+        outruinTest.renderer.draw(s);captures.push(outruinTest.renderer.canvas.toDataURL().split(',')[1]);}
+      return captures;});for(let i=0;i<captures.length;i++)fs.writeFileSync(path.join(out,'road-'+i+'.png'),Buffer.from(captures[i],'base64'));
+    assert.equal(new Set(captures).size,3);
+  });
+  await check('a failed audio device cannot stop the render loop or overwrite preferences',async()=>{
+    await page.click('#sound');assert.equal(await page.locator('#sound').getAttribute('aria-pressed'),'true');
+    await page.waitForFunction(()=>outruinTest.sound.context?.state==='running');
+    const result=await page.evaluate(()=>{const a=outruinTest.sound;a.stop();window.savedAudioBuffer=a.context.createBuffer;a.context.createBuffer=()=>{throw new Error('injected device failure');};a.sync(outruinTest.state());return {failed:a.failed,enabled:a.enabled,tick:outruinTest.state().tick};});
+    assert.equal(result.failed,true);assert.equal(result.enabled,true);await page.waitForFunction(t=>outruinTest.state().tick>t,result.tick);
+    assert.equal(await page.evaluate(()=>localStorage.getItem('outruin.sound')),'on');
+    await page.evaluate(()=>{outruinTest.sound.context.createBuffer=window.savedAudioBuffer;});
+    await page.click('#sound');await page.click('#sound');await page.waitForFunction(()=>outruinTest.sound.music?.snapshot().active);
+    await page.keyboard.press('KeyP');assert.equal(await page.evaluate(()=>outruinTest.sound.music),null);await page.click('#resume');
+  });
   await check('outpost movement, loot and return through keyboard',async()=>{
     await page.evaluate(async()=>{const {createGame,enterOutpost}=await import('./js/sim.js');const s=createGame();s.fuel=1000;enterOutpost(s);s.foot.enemies=[];outruinTest.load(s);});
     await page.keyboard.down('KeyD');await page.waitForFunction(()=>outruinTest.state().foot.x>260);await page.keyboard.up('KeyD');await page.keyboard.press('KeyE');await page.waitForFunction(()=>outruinTest.state().fuel>1000);
@@ -49,8 +78,8 @@ try{
     const downloading=page.waitForEvent('download');await page.click('#export-wav');const wav=await downloading;
     assert.equal(wav.suggestedFilename(),'outruin-last-signal-radio.wav');
     const expected=await page.evaluate(async()=>{
-      const {compileScore}=await import('./js/sound.js'),{DEFAULT_PACK}=await import('./js/mod.js');
-      const digest=await crypto.subtle.digest('SHA-256',compileScore(DEFAULT_PACK,0).wav());
+      const {compileSoundtrack}=await import('./js/sound.js'),{DEFAULT_PACK}=await import('./js/mod.js');
+      const digest=await crypto.subtle.digest('SHA-256',compileSoundtrack(DEFAULT_PACK,0).wav());
       return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
     });
     assert.equal(createHash('sha256').update(fs.readFileSync(await wav.path())).digest('hex'),expected);
@@ -80,8 +109,8 @@ try{
     await page.click('#settings');await page.selectOption('#profile','snes');
     await page.evaluate(()=>{window.testPad={connected:true,id:'Synthetic SNES',mapping:'',axes:[0,0],buttons:Array.from({length:16},()=>({pressed:false}))};Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[window.testPad]});});
     await page.waitForFunction(()=>document.querySelector('#pad-status').textContent.includes('Synthetic'));
-    await page.locator('#bindings button').filter({hasText:/^FIRE/}).click();await page.waitForTimeout(40);await page.evaluate(()=>window.testPad.buttons[6].pressed=true);await page.waitForFunction(()=>outruinTest.controls.custom?.fire?.button===6);await page.evaluate(()=>window.testPad.buttons[6].pressed=false);
-    await page.locator('[data-close="controls-dialog"]').click();await page.click('#resume');await page.waitForTimeout(50);const a=await page.evaluate(()=>outruinTest.state().ammo);await page.evaluate(()=>window.testPad.buttons[6].pressed=true);await page.waitForFunction(n=>outruinTest.state().ammo<n,a);await page.evaluate(()=>window.testPad.buttons[6].pressed=false);
+    await page.locator('#bindings button').filter({hasText:/^FIRE/}).click();await page.waitForFunction(()=>outruinTest.controls.armed);await page.evaluate(()=>window.testPad.buttons[6].pressed=true);await page.waitForFunction(()=>outruinTest.controls.custom?.fire?.button===6);await page.evaluate(()=>window.testPad.buttons[6].pressed=false);
+    await page.locator('[data-close="controls-dialog"]').click();await page.click('#resume');await page.waitForFunction(()=>!outruinTest.controls.blocked);const a=await page.evaluate(()=>outruinTest.state().ammo);await page.evaluate(()=>window.testPad.buttons[6].pressed=true);await page.waitForFunction(n=>outruinTest.state().ammo<n,a);await page.evaluate(()=>window.testPad.buttons[6].pressed=false);
   });
   await check('focus loss and controller disconnect pause safely',async()=>{await page.evaluate(()=>dispatchEvent(new Event('blur')));assert.ok(await page.locator('#paused').isVisible());await page.click('#resume');await page.evaluate(()=>{window.testPad=null;dispatchEvent(new Event('gamepaddisconnected'));});await page.waitForFunction(()=>!document.querySelector('#paused').hidden);});
   await check('mobile layouts and simultaneous touch input',async()=>{
